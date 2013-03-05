@@ -1,0 +1,13 @@
+[Http]
+Addr = ":4000"
+
+[Workers]
+CmdLine = "/tmp/hammy_spexecuter_test_subp"
+
+[CouchbaseTriggers]
+ConnectTo = "http://localhost:8091/"
+Bucket = "config"
+
+[CouchbaseStates]
+ConnectTo = "http://localhost:8091/"
+Bucket = "state"

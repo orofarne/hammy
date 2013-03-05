@@ -1,0 +1,28 @@
+{
+  "object2": {
+    "key2.2": [
+      {
+        "value": 12345,
+        "timestamp": 1361785858
+      },
+      {
+        "value": 999.3,
+        "timestamp": 1361785927
+      }
+    ],
+    "key2.1": [
+      {
+        "value": "test string",
+        "timestamp": 1361785817
+      }
+    ]
+  },
+  "object1": {
+    "key1.1": [
+      {
+        "value": 3.14,
+        "timestamp": 1361785778
+      }
+    ]
+  }
+}
