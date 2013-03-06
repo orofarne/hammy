@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"bytes"
 	"syscall"
+	"log"
 	"github.com/ugorji/go-msgpack"
 )
 
@@ -131,18 +132,22 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 func (e *SPExecuter) freeWorker(worker *process) {
 	//Check process state
 	var status syscall.WaitStatus
-	var rusage syscall.Rusage
 
-	_, err := syscall.Wait4(worker.Process.Pid, &status, syscall.WNOHANG, &rusage)
+	//We can't use worker.ProcessState (it's available only after a call to Wait or Run)
+	wpid, err := syscall.Wait4(worker.Process.Pid, &status, syscall.WNOHANG, nil)
 
 	switch {
-		case err == nil && !status.Continued():
+		case err == nil && wpid == 0:
+		case err == nil && status.Exited():
 			worker.Cmd = nil
 		case err != nil:
+			log.Printf("SPExecuter: syscall.Wait4 error: %#v", err)
 			fallthrough
 		case worker.Count >= e.MaxIter: //Check iteration count
 			err = worker.Process.Kill()
-			_ = err //FIXME
+			if err != nil {
+				log.Printf("SPExecuter: Process.Kill error: %#v", err)
+			}
 			worker.Cmd = nil
 		default:
 	}

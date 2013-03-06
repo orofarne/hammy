@@ -2,6 +2,7 @@
 Addr = ":4000"
 
 [Workers]
+PoolSize = 10
 CmdLine = "ruby/worker.rb"
 
 [CouchbaseTriggers]
