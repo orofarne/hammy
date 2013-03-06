@@ -25,6 +25,11 @@ type WorkerProcessInput struct {
 	IData IncomingObjectData
 }
 
+type WorkerProcessOutput struct {
+	CB *CmdBuffer
+	S *State
+}
+
 //Executer implementation for subprocesses with MessagePack-based RPC
 type SPExecuter struct {
 	CmdLine string
@@ -55,6 +60,11 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 		data IncomingObjectData) (cmdb *CmdBuffer, err error) {
 //
 	cmdb = NewCmdBuffer(0)
+	res := WorkerProcessOutput{
+		CB: cmdb,
+		S: state,
+	}
+
 	//Fetch worker (may be wait for free worker)
 	worker, err := e.getWorker()
 	if err != nil {
@@ -76,16 +86,13 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 		return
 	}
 
-	fmt.Printf("Waiting for result...\n")
-
 	//wait, read and unmarshal result
 	dec := msgpack.NewDecoder(worker.Stdout, nil)
-	err = dec.Decode(cmdb)
+	*state = NewState()
+	err = dec.Decode(&res)
 	if err != nil {
 		err = fmt.Errorf("SPExexuter error: %#v, child stderr: %#v", err, worker.Stderr.String())
 	}
-
-	fmt.Printf("Result: %#v\n", cmdb)
 
 	return
 }
@@ -125,7 +132,8 @@ func (e *SPExecuter) freeWorker(worker *process) {
 	//Check process state
 	var status syscall.WaitStatus
 	var rusage syscall.Rusage
-	_, err := syscall.Wait4(worker.Process.Pid, &status, 0, &rusage)
+
+	_, err := syscall.Wait4(worker.Process.Pid, &status, syscall.WNOHANG, &rusage)
 
 	switch {
 		case err == nil && !status.Continued():

@@ -2,7 +2,7 @@
 Addr = ":4000"
 
 [Workers]
-CmdLine = "/tmp/hammy_spexecuter_test_subp"
+CmdLine = "ruby/worker.rb"
 
 [CouchbaseTriggers]
 ConnectTo = "http://localhost:8091/"

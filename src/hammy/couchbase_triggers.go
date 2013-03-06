@@ -2,6 +2,7 @@ package hammy
 
 import (
 	"fmt"
+	"encoding/json"
 	"github.com/couchbaselabs/go-couchbase"
 	"github.com/dustin/gomemcached"
 )
@@ -43,7 +44,12 @@ func (tg *CouchbaseTriggersGetter) MGet(keys []string) (triggers map[string]stri
 	for k, r := range ans {
 		switch r.Status {
 			case gomemcached.SUCCESS:
-				triggers[k] = string(r.Body)
+				var body string
+				err = json.Unmarshal(r.Body, &body)
+				if err != nil {
+					return
+				}
+				triggers[k] = body
 			case gomemcached.KEY_ENOENT:
 				//nil
 			default:

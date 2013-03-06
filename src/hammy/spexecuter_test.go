@@ -23,7 +23,7 @@ func createTestProgramm() (string, error) {
 		func main() {
 			for {
 				var input hammy.WorkerProcessInput
-				output := hammy.CmdBuffer{
+				cmdb := hammy.CmdBuffer{
 					{CmdType: "cmd1", Cmd: "Hello",},
 					{CmdType: "cmd2", Cmd: "World",},
 				}
@@ -33,6 +33,11 @@ func createTestProgramm() (string, error) {
 
 				if err := dec.Decode(&input); err != nil {
 					log.Fatalf("Decode error: %#v", err)
+				}
+
+				output := hammy.WorkerProcessOutput{
+					S: input.S,
+					CB: &cmdb,
 				}
 
 				time.Sleep(100 * time.Millisecond)
