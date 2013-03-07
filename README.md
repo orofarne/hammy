@@ -1,5 +1,5 @@
 BUILD
 =====
     . ./env.sh
-    ./bootstrap.go
+    go run bootstrap.go
     go install hammyd
