@@ -32,8 +32,8 @@ class EvalEnv
 		}
 	end
 
-	def objname()
-		@objname
+	def objectname()
+		@objectname
 	end
 
 	def key()
@@ -46,8 +46,8 @@ class EvalEnv
 
 	def results()
 		{
-			"CB" => @cmdbuf,
-			"S" => @state
+			"CmdBuffer" => @cmdbuf,
+			"State" => @state
 		}
 	end
 
@@ -64,15 +64,15 @@ u.each do |obj|
 	res = {}
 	trigger = obj["Trigger"]
 	if not trigger.empty? then
-		e = EvalEnv.new obj["S"], obj["Key"]
+		e = EvalEnv.new obj["State"], obj["Key"]
 		obj["IData"].each { |k, v|
 			e.eval(trigger, k, v)
 		}
 		res = e.results()
 	end
 
-	res["CB"] = nil if !res["CB"] || res["CB"].empty?
-	res["S"] = nil if !res["S"] || res["S"].empty?
+	res["CmdBuffer"] = nil if !res["CmdBuffer"] || res["CmdBuffer"].empty?
+	res["State"] = nil if !res["State"] || res["State"].empty?
 
 	$stdout.binmode
 	$stdout.write(MessagePack.pack(res))

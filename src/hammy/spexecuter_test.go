@@ -35,12 +35,12 @@ func createTestProgramm() (string, error) {
 					log.Fatalf("Decode error: %#v", err)
 				}
 
-				output := hammy.WorkerProcessOutput{
-					S: input.S,
-					CB: &cmdb,
-				}
-
 				time.Sleep(100 * time.Millisecond)
+
+				output := hammy.WorkerProcessOutput{
+					State: input.State,
+					CmdBuffer: &cmdb,
+				}
 
 				if err := enc.Encode(&output); err != nil {
 					log.Fatalf("Encode error: %#v", err)

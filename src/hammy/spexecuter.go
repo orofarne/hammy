@@ -22,13 +22,13 @@ type process struct {
 type WorkerProcessInput struct {
 	Key string
 	Trigger string
-	S *State
+	State *State
 	IData IncomingObjectData
 }
 
 type WorkerProcessOutput struct {
-	CB *CmdBuffer
-	S *State
+	CmdBuffer *CmdBuffer
+	State *State
 }
 
 //Executer implementation for subprocesses with MessagePack-based RPC
@@ -62,8 +62,8 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 //
 	cmdb = NewCmdBuffer(0)
 	res := WorkerProcessOutput{
-		CB: cmdb,
-		S: state,
+		CmdBuffer: cmdb,
+		State: state,
 	}
 
 	//Fetch worker (may be wait for free worker)
@@ -77,7 +77,7 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 	pInput := WorkerProcessInput{
 		Key: key,
 		Trigger: trigger,
-		S: state,
+		State: state,
 		IData: data,
 	}
 
