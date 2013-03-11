@@ -23,9 +23,13 @@ func createTestProgramm() (string, error) {
 		func main() {
 			for {
 				var input hammy.WorkerProcessInput
+				cmd1opt := make(map[string]string)
+				cmd2opt := make(map[string]string)
+				cmd1opt["message"] = "Hello"
+				cmd2opt["message"] = "World"
 				cmdb := hammy.CmdBuffer{
-					{CmdType: "cmd1", Cmd: "Hello",},
-					{CmdType: "cmd2", Cmd: "World",},
+					{Cmd: "cmd1", Options: cmd1opt,},
+					{Cmd: "cmd2", Options: cmd2opt,},
 				}
 
 				dec := msgpack.NewDecoder(os.Stdin, nil)
@@ -122,8 +126,8 @@ func TestSPExecuterSimple(t *testing.T) {
 		t.Fatalf("Invalid size of cmdb: %#v", cmdb)
 	}
 
-	if (*cmdb)[0].CmdType != "cmd1" || (*cmdb)[0].Cmd != "Hello" ||
-		(*cmdb)[1].CmdType != "cmd2" || (*cmdb)[1].Cmd != "World" {
+	if (*cmdb)[0].Cmd != "cmd1" || (*cmdb)[0].Options["message"] != "Hello" ||
+		(*cmdb)[1].Cmd != "cmd2" || (*cmdb)[1].Options["message"] != "World" {
 		t.Errorf("Invalid cmdb: %#v", cmdb)
 	}
 }

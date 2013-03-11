@@ -2,8 +2,8 @@ package hammy
 
 //Command
 type Cmd struct {
-	CmdType string
 	Cmd string
+	Options map[string]string
 }
 
 //Commads queue from trigger
@@ -18,5 +18,5 @@ func NewCmdBuffer(size uint32) *CmdBuffer {
 //Iterface for command commiter
 //Returns data for next processing stage or error
 type CmdBufferProcessor interface {
-	Process(key string, cmdb *CmdBuffer) (sendBuffer IncomingData, err error)
+	Process(key string, cmdb *CmdBuffer) error
 }

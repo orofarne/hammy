@@ -85,8 +85,8 @@ func (e *ExecuterTestImpl) ProcessTrigger(key string, trigger string,
 type CmdBufferProcessorTestImpl struct {
 }
 
-func (cbp *CmdBufferProcessorTestImpl) Process(key string, cmdb *CmdBuffer) (sendBuffer IncomingData, err error) {
-	return NewIncomingData(), nil
+func (cbp *CmdBufferProcessorTestImpl) Process(key string, cmdb *CmdBuffer) error {
+	return nil
 }
 
 func TestRequestImplSimple(t *testing.T) {

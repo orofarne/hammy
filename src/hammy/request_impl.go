@@ -160,13 +160,11 @@ func (rh *RequestHandlerImpl) processTrigger(
 	}
 
 	//Commit cmdbuffer
-	sendBuffer, err := rh.CBProcessor.Process(key, cmdb)
+	err = rh.CBProcessor.Process(key, cmdb)
 	if err != nil {
 		ret.Err = err
 		return
 	}
-
-	_ = sendBuffer //TODO
 
 	return
 }

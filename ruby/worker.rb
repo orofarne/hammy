@@ -25,10 +25,16 @@ class EvalEnv
 		}
 	end
 
-	def cmd(cmd, body)
+	def cmd(cmd, options = {})
+		opts = {}
+
+		options.each { |k, v|
+			opts[k] = v.to_s
+		}
+
 		@cmdbuf << {
-			"CmdType" => cmd,
-			"Cmd" => body
+			"Cmd" => cmd,
+			"Options" => opts
 		}
 	end
 
