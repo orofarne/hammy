@@ -5,10 +5,17 @@ import "log"
 type CmdBufferProcessorImpl struct {
 }
 
-func (cbp *CmdBufferProcessorImpl) Process(key string, cmdb *CmdBuffer) error {
+func (cbp *CmdBufferProcessorImpl) Process(key string, cmdb *CmdBuffer) (sendBuffer IncomingData, err error) {
 	for _, c := range *cmdb {
-		log.Printf("[%s] %s\t\t%s", key, c.CmdType, c.Cmd)
+		switch c.CmdType {
+			case "log":
+				log.Printf("[%s] %s", key, c.Cmd)
+			case "send":
+				//TODO
+			default:
+				log.Printf("[%s] Undefined command: %s\t%s", key, c.CmdType, c.Cmd)
+		}
 	}
 
-	return nil
+	return NewIncomingData(), nil
 }

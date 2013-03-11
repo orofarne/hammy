@@ -54,7 +54,11 @@ class EvalEnv
 	def eval(code, key, data)
 		@key = key
 		@data = data.sort { |x, y| x["Timestamp"] <=> y["Timestamp"] }
-		return binding().eval(code)
+		begin
+			return binding().eval(code)
+		rescue Exception => e
+			cmd("log", "Error: #{e.message}")
+		end
 	end
 end
 

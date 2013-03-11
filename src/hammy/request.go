@@ -33,6 +33,10 @@ type IncomingObjectData map[string][]IncomingValueData
 //  }
 type IncomingData map[string]IncomingObjectData
 
+func NewIncomingData() IncomingData {
+	return make(map[string]IncomingObjectData)
+}
+
 //Interface for incoming data handler
 type RequestHandler interface {
 	Handle(data IncomingData) map[string]error
