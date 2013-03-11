@@ -53,5 +53,5 @@ func main() {
 	goGet("github.com/couchbaselabs/go-couchbase")
 
 	log.Printf(";-)")
-	log.Printf("Now you can run `go install hammyd hammycid`")
+	log.Printf("Now you can run `go test hammy && go install hammy hammyd hammycid`")
 }

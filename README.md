@@ -2,7 +2,7 @@ BUILD
 =====
     . ./env.sh
     go run bootstrap.go
-    go install hammyd
+    go test hammy && go install hammy hammyd hammycid
 
 INSTALL
 =======
