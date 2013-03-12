@@ -1,6 +1,9 @@
 [Http]
 Addr = ":4000"
 
+[Log]
+File = "/tmp/hammy.log"
+
 [Workers]
 PoolSize = 10
 CmdLine = "ruby/worker.rb"

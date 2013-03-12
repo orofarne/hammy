@@ -41,6 +41,17 @@ func main() {
 		log.Fatalf("Inavalid config: %v", err)
 	}
 
+	if cfg.Log.File != "" {
+		logf, err := os.OpenFile(cfg.Log.File,
+			os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0666)
+
+		if err != nil {
+			log.Fatalf("Failed to open logfile: %v", err)
+		}
+
+		log.SetOutput(logf)
+	}
+
 	log.Printf("Initializing...")
 
 	tg, err := hammy.NewCouchbaseTriggersGetter(cfg)

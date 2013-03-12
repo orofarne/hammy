@@ -10,6 +10,11 @@ type Config struct {
 		//e.g. "0.0.0.0:4000" or ":4000" for ipv6
 		Addr string
 	}
+	//Logging options
+	Log struct {
+		//File for logging (stderr if empty)
+		File string
+	}
 	//Workers
 	Workers struct {
 		//Count of workers
