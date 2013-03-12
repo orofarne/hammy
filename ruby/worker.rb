@@ -12,7 +12,7 @@ class EvalEnv
 	def get_state(key)
 		elem = @state[key]
 		if elem then
-			elem["Value"]
+			elem['Value']
 		else
 			nil
 		end
@@ -20,8 +20,14 @@ class EvalEnv
 
 	def set_state(key, value)
 		@state[key] = {
-			"Value" => value,
-			"LastUpdate" => Time.now.to_i
+			'Value' => value,
+			'LastUpdate' => Time.now.to_i
+		}
+	end
+
+	def each_state()
+		@state.each { |k, v|
+			yield k, v['Value'], ['LastUpdate']
 		}
 	end
 
@@ -33,8 +39,8 @@ class EvalEnv
 		}
 
 		@cmdbuf << {
-			"Cmd" => cmd,
-			"Options" => opts
+			'Cmd' => cmd,
+			'Options' => opts
 		}
 	end
 
@@ -52,18 +58,18 @@ class EvalEnv
 
 	def results()
 		{
-			"CmdBuffer" => @cmdbuf,
-			"State" => @state
+			'CmdBuffer' => @cmdbuf,
+			'State' => @state
 		}
 	end
 
 	def eval(code, key, data)
 		@key = key
-		@data = data.sort { |x, y| x["Timestamp"] <=> y["Timestamp"] }
+		@data = data.sort { |x, y| x['Timestamp'] <=> y['Timestamp'] }
 		begin
 			return binding().eval(code)
 		rescue Exception => e
-			cmd("log", "Error: #{e.message}")
+			cmd('log', "Error: #{e.message}")
 		end
 	end
 end
@@ -72,17 +78,17 @@ $stdin.binmode
 u = MessagePack::Unpacker.new($stdin)
 u.each do |obj|
 	res = {}
-	trigger = obj["Trigger"]
+	trigger = obj['Trigger']
 	if not trigger.empty? then
-		e = EvalEnv.new obj["State"], obj["Key"]
-		obj["IData"].each { |k, v|
+		e = EvalEnv.new obj['State'], obj['Key']
+		obj['IData'].each { |k, v|
 			e.eval(trigger, k, v)
 		}
 		res = e.results()
 	end
 
-	res["CmdBuffer"] = nil if !res["CmdBuffer"] || res["CmdBuffer"].empty?
-	res["State"] = nil if !res["State"] || res["State"].empty?
+	res['CmdBuffer'] = nil if !res['CmdBuffer'] || res['CmdBuffer'].empty?
+	res['State'] = nil if !res['State'] || res['State'].empty?
 
 	$stdout.binmode
 	$stdout.write(MessagePack.pack(res))
