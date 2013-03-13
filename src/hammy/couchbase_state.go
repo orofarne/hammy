@@ -133,6 +133,10 @@ func (sk *CouchbaseStateKeeper) Set(key string, data State, cas *uint64) (retry 
 
 		resp, e := mc.Send(req)
 		if e != nil {
+			if resp != nil && resp.Status == gomemcached.KEY_EEXISTS {
+				e = nil
+				retry = true
+			}
 			return
 		}
 
