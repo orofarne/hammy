@@ -43,7 +43,7 @@ func (rh *RequestHandlerImpl) Handle(data IncomingData) (errs map[string]error) 
 	triggers, err := rh.TGetter.MGet(keys)
 	if err != nil {
 		for _, k := range keys {
-			errs[k] = err
+			errs[k] = fmt.Errorf("Failed to load trigger: %v", err)
 		}
 		return
 	}
@@ -73,7 +73,7 @@ func (rh *RequestHandlerImpl) Handle(data IncomingData) (errs map[string]error) 
 	for key, tr := range triggers {
 		state := states[key]
 		if state.Err != nil {
-			errs[key] = state.Err
+			errs[key] = fmt.Errorf("Failed to load state: %v", state.Err)
 		} else {
 			go rh.processTrigger(key, tr,
 				state.State, state.Cas, data[key], c)

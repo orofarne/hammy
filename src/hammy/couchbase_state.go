@@ -143,7 +143,7 @@ func (sk *CouchbaseStateKeeper) Set(key string, data State, cas *uint64) (retry 
 			case gomemcached.SUCCESS:
 				return
 			default:
-				return fmt.Errorf("%s", resp.Error())
+				return fmt.Errorf("CAS operation failed: %v", resp.Error())
 		}
 		panic("?!!")
 	})
