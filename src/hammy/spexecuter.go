@@ -58,12 +58,12 @@ func NewSPExecuter(cfg Config) *SPExecuter {
 }
 
 func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
-		data IncomingObjectData) (cmdb *CmdBuffer, err error) {
+		data IncomingObjectData) (newState *State, cmdb *CmdBuffer, err error) {
 //
 	cmdb = NewCmdBuffer(0)
 	res := WorkerProcessOutput{
 		CmdBuffer: cmdb,
-		State: state,
+		State: newState,
 	}
 
 	//Fetch worker (may be wait for free worker)

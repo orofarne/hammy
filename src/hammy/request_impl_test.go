@@ -72,14 +72,14 @@ type ExecuterTestImpl struct {
 }
 
 func (e *ExecuterTestImpl) ProcessTrigger(key string, trigger string,
-	state *State, data IncomingObjectData) (cmdb *CmdBuffer, err error) {
+	state *State, data IncomingObjectData) (newState *State, cmdb *CmdBuffer, err error) {
 //
 	desired_trigger := fmt.Sprintf("Trigger for key '%s'", key)
 	if trigger != desired_trigger {
-		return NewCmdBuffer(0), fmt.Errorf("Expected trigger is %#v, got %#v",
+		return nil, NewCmdBuffer(0), fmt.Errorf("Expected trigger is %#v, got %#v",
 			desired_trigger, trigger)
 	}
-	return NewCmdBuffer(0), nil
+	return state, NewCmdBuffer(0), nil
 }
 
 type CmdBufferProcessorTestImpl struct {

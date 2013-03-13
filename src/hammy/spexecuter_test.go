@@ -117,10 +117,11 @@ func TestSPExecuterSimple(t *testing.T) {
 	state := State{}
 	data := IncomingObjectData{}
 
-	cmdb, err := e.ProcessTrigger(key, trigger, &state, data)
+	newState, cmdb, err := e.ProcessTrigger(key, trigger, &state, data)
 	if err != nil {
 		t.Fatalf("ProcessTrigger error: %#v", err)
 	}
+	_ = newState
 
 	if len(*cmdb) != 2 {
 		t.Fatalf("Invalid size of cmdb: %#v", cmdb)
