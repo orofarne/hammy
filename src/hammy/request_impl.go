@@ -112,13 +112,13 @@ func (rh *RequestHandlerImpl) processTrigger(
 //
 	cmdb, err := rh.Exec.ProcessTrigger(key, trigger, &state, data)
 	if err != nil {
-		ret.Err = err
+		ret.Err = fmt.Errorf("Trigger processor error: %v", err)
 		return
 	}
 
 	retry, err := rh.SKeeper.Set(key, state, cas)
 	if err != nil {
-		ret.Err = err
+		ret.Err = fmt.Errorf("StateKeeper set operation failed: %v", err)
 		return
 	}
 	if retry {
@@ -135,7 +135,7 @@ func (rh *RequestHandlerImpl) processTrigger(
 			//Retry...
 			ans := rh.SKeeper.Get(key)
 			if ans.Err != nil {
-				ret.Err = ans.Err
+				ret.Err = fmt.Errorf("StateKeeper get operation failed: %v", ans.Err)
 				return
 			}
 			state = ans.State
@@ -143,13 +143,13 @@ func (rh *RequestHandlerImpl) processTrigger(
 
 			cmdb, err = rh.Exec.ProcessTrigger(key, trigger, &state, data)
 			if err != nil {
-				ret.Err = err
+				ret.Err = fmt.Errorf("Trigger processor error: %v", err)
 				return
 			}
 
 			retry, err = rh.SKeeper.Set(key, state, cas)
 			if err != nil {
-				ret.Err = err
+				ret.Err = fmt.Errorf("StateKeeper set operation failed: %v", err)
 				return
 			}
 			if !retry {
@@ -162,7 +162,7 @@ func (rh *RequestHandlerImpl) processTrigger(
 	//Commit cmdbuffer
 	err = rh.CBProcessor.Process(key, cmdb)
 	if err != nil {
-		ret.Err = err
+		ret.Err = fmt.Errorf("Failed to process cmdbuffer: %v", err)
 		return
 	}
 
