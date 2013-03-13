@@ -44,7 +44,7 @@ func NewCouchbaseStateKeeper(cfg Config) (*CouchbaseStateKeeper, error) {
 func (sk *CouchbaseStateKeeper) Get(key string) StateKeeperAnswer {
 	s := NewState()
 	var cas uint64
-	err := sk.Bucket.Gets(key, s, &cas)
+	err := sk.Bucket.Gets(key, &s, &cas)
 
 	if err == nil {
 		return StateKeeperAnswer{
