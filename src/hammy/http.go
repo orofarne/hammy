@@ -57,6 +57,7 @@ func (h HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		//TODO: correct answer to client
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		fmt.Fprintf(w, "%v\n", errs);
+		log.Printf("Internal Server Error: %v", errs)
 		return
 	}
 

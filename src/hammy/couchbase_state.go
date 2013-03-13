@@ -137,7 +137,7 @@ func (sk *CouchbaseStateKeeper) Set(key string, data State, cas *uint64) (retry 
 		}
 
 		switch resp.Status {
-			case gomemcached.NOT_STORED: //???????
+			case gomemcached.KEY_EEXISTS:
 				retry = true
 				return
 			case gomemcached.SUCCESS:
