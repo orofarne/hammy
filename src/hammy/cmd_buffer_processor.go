@@ -5,7 +5,8 @@ import "log"
 import "time"
 
 type CmdBufferProcessorImpl struct {
-	RHandler RequestHandler
+	//Send buffer
+	SBuffer SendBuffer
 }
 
 func (cbp *CmdBufferProcessorImpl) Process(key string, cmdb *CmdBuffer) error {
@@ -33,10 +34,8 @@ func (cbp *CmdBufferProcessorImpl) log(key string, message string) error {
 
 func (cbp *CmdBufferProcessorImpl) processSend(key string, opts map[string]string) {
 	objName := opts["object"]
-	needGo := true
 	if objName == "" {
 		objName = key
-		needGo = false
 	}
 
 	itemKey := opts["key"]
@@ -60,16 +59,5 @@ func (cbp *CmdBufferProcessorImpl) processSend(key string, opts map[string]strin
 	objData[itemKey] = []IncomingValueData{objValue}
 	data[objName] = objData
 
-	handleFunc := func() {
-		errs := cbp.RHandler.Handle(data)
-		if len(errs) > 0 {
-			cbp.log(objName, fmt.Sprintf("Send error: %v", errs))
-		}
-	}
-
-	if needGo {
-		go handleFunc()
-	} else {
-		handleFunc()
-	}
+	cbp.SBuffer.Push(&data)
 }

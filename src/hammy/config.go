@@ -24,6 +24,10 @@ type Config struct {
 		//Worker live limit
 		MaxIter uint
 	}
+	//Send buffer
+	SendBuffer struct {
+		SleepTime float32
+	}
 	//Coucbase for triggers configuration
 	CouchbaseTriggers struct {
 		//e.g. "http://dev-couchbase.example.com:8091/"
@@ -51,6 +55,11 @@ type Config struct {
 func SetConfigDefaults(cfg *Config) error {
 	//Section [Http]
 	if cfg.Http.Addr == "" { cfg.Http.Addr = ":4000" }
+
+	//Section [Log]
+
+	//Section [SendBuffer]
+	if cfg.SendBuffer.SleepTime == 0.0 { cfg.SendBuffer.SleepTime = 10.0 }
 
 	//Section [Workers]
 	if cfg.Workers.PoolSize == 0 { cfg.Workers.PoolSize = 5 }

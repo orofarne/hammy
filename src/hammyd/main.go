@@ -75,7 +75,8 @@ func main() {
 		CBProcessor: &cbp,
 	}
 
-	cbp.RHandler = &rh
+	sb := hammy.NewSendBufferImpl(&rh, cfg)
+	cbp.SBuffer = sb
 
 	log.Printf("Starting HTTP interface...")
 	err = hammy.StartHttp(&rh, cfg)
