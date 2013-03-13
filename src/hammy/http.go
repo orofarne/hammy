@@ -2,6 +2,7 @@ package hammy
 
 import (
 	"fmt"
+	"log"
 	"time"
 	"net/http"
 	"encoding/json"
