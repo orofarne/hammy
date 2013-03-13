@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 	"fmt"
+	"reflect"
 )
 
 //Main data processor implementation
@@ -116,49 +117,55 @@ func (rh *RequestHandlerImpl) processTrigger(
 		return
 	}
 
-	//TODO: check state
+	//Save state if it changes
+	if !StatesEq(newState, &state) {
+		retry, err := rh.SKeeper.Set(key, *newState, cas)
+		if err != nil {
+			ret.Err = fmt.Errorf("StateKeeper set operation failed: %v", err)
+			return
+		}
+		if retry {
+			//Ooops! Collision!
+			//Starting loop of retries
+			rand.Seed( time.Now().UTC().UnixNano())
+			for {
+				//random sleep
+				t := rand.Intn(100)
+				if t > 50 {
+					time.Sleep(time.Duration(t) * time.Millisecond)
+				}
 
-	retry, err := rh.SKeeper.Set(key, *newState, cas)
-	if err != nil {
-		ret.Err = fmt.Errorf("StateKeeper set operation failed: %v", err)
-		return
-	}
-	if retry {
-		//Ooops! Collision!
-		//Starting loop of retries
-		rand.Seed( time.Now().UTC().UnixNano())
-		for {
-			//random sleep
-			t := rand.Intn(100)
-			if t > 50 {
-				time.Sleep(time.Duration(t) * time.Millisecond)
-			}
+				//Retry...
+				ans := rh.SKeeper.Get(key)
+				if ans.Err != nil {
+					ret.Err = fmt.Errorf("StateKeeper get operation failed: %v", ans.Err)
+					return
+				}
+				state = ans.State
+				cas = ans.Cas
 
-			//Retry...
-			ans := rh.SKeeper.Get(key)
-			if ans.Err != nil {
-				ret.Err = fmt.Errorf("StateKeeper get operation failed: %v", ans.Err)
-				return
-			}
-			state = ans.State
-			cas = ans.Cas
+				newState, cmdb, err = rh.Exec.ProcessTrigger(key, trigger, &state, data)
+				if err != nil {
+					ret.Err = fmt.Errorf("Trigger processor error: %v", err)
+					return
+				}
 
-			newState, cmdb, err = rh.Exec.ProcessTrigger(key, trigger, &state, data)
-			if err != nil {
-				ret.Err = fmt.Errorf("Trigger processor error: %v", err)
-				return
-			}
-
-			//TODO: check state
-
-			retry, err = rh.SKeeper.Set(key, *newState, cas)
-			if err != nil {
-				ret.Err = fmt.Errorf("StateKeeper set operation failed: %v", err)
-				return
-			}
-			if !retry {
-				//Work is done! No more need to retry!
-				break
+				//TODO: check state
+				//Save state if it changes
+				if !StatesEq(newState, &state) {
+					retry, err = rh.SKeeper.Set(key, *newState, cas)
+					if err != nil {
+						ret.Err = fmt.Errorf("StateKeeper set operation failed: %v", err)
+						return
+					}
+					if !retry {
+						//Work is done! No more need to retry!
+						break
+					}
+				} else {
+					// %)
+					break
+				}
 			}
 		}
 	}
@@ -171,4 +178,10 @@ func (rh *RequestHandlerImpl) processTrigger(
 	}
 
 	return
+}
+
+//Compare two States
+//true if equal, false otherwise
+func StatesEq(a *State, b *State) bool {
+	return reflect.DeepEqual(a, b)
 }
