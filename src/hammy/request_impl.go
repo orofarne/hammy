@@ -150,7 +150,6 @@ func (rh *RequestHandlerImpl) processTrigger(
 					return
 				}
 
-				//TODO: check state
 				//Save state if it changes
 				if !StatesEq(newState, &state) {
 					retry, err = rh.SKeeper.Set(key, *newState, cas)
