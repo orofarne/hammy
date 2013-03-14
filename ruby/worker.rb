@@ -69,7 +69,7 @@ class EvalEnv
 		begin
 			return binding().eval(code)
 		rescue Exception => e
-			cmd('log', "Error: #{e.message}")
+			cmd 'log', :message => "Error: #{e.message}"
 		end
 	end
 end

@@ -76,6 +76,7 @@ func main() {
 	}
 
 	sb := hammy.NewSendBufferImpl(&rh, cfg)
+	go sb.Listen()
 	cbp.SBuffer = sb
 
 	log.Printf("Starting HTTP interface...")
