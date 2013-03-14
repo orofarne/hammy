@@ -61,6 +61,7 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 		data IncomingObjectData) (newState *State, cmdb *CmdBuffer, err error) {
 //
 	cmdb = NewCmdBuffer(0)
+	newState = NewState()
 	res := WorkerProcessOutput{
 		CmdBuffer: cmdb,
 		State: newState,
@@ -89,7 +90,6 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 
 	//wait, read and unmarshal result
 	dec := msgpack.NewDecoder(worker.Stdout, nil)
-	*state = NewState()
 	err = dec.Decode(&res)
 	if err != nil {
 		err = fmt.Errorf("SPExexuter error: %#v, child stderr: %#v", err, worker.Stderr.String())

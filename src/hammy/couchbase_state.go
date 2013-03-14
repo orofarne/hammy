@@ -44,11 +44,11 @@ func NewCouchbaseStateKeeper(cfg Config) (*CouchbaseStateKeeper, error) {
 func (sk *CouchbaseStateKeeper) Get(key string) StateKeeperAnswer {
 	s := NewState()
 	var cas uint64
-	err := sk.Bucket.Gets(key, &s, &cas)
+	err := sk.Bucket.Gets(key, s, &cas)
 
 	if err == nil {
 		return StateKeeperAnswer{
-			State: s,
+			State: *s,
 			Cas: &cas,
 			Err: nil,
 		}
@@ -70,10 +70,10 @@ func (sk *CouchbaseStateKeeper) MGet(keys []string) (states map[string]StateKeep
 		switch r.Status {
 			case gomemcached.SUCCESS:
 				s := NewState()
-				err := json.Unmarshal(r.Body, &s)
+				err := json.Unmarshal(r.Body, s)
 				if err == nil {
 					states[k] = StateKeeperAnswer{
-						State: s,
+						State: *s,
 						Cas: &r.Cas,
 						Err: nil,
 					}
@@ -86,7 +86,7 @@ func (sk *CouchbaseStateKeeper) MGet(keys []string) (states map[string]StateKeep
 				}
 			case gomemcached.KEY_ENOENT:
 				states[k] = StateKeeperAnswer{
-					State: NewState(),
+					State: *NewState(),
 					Cas: nil,
 					Err: nil,
 				}
@@ -102,7 +102,7 @@ func (sk *CouchbaseStateKeeper) MGet(keys []string) (states map[string]StateKeep
 	for _, k := range keys {
 		if _, found := states[k]; !found {
 			states[k] = StateKeeperAnswer{
-				State: NewState(),
+				State: *NewState(),
 				Cas: nil,
 				Err: nil,
 			}

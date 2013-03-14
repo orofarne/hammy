@@ -60,11 +60,13 @@ type State map[string]struct {
 	Value interface{}
 }
 
-func NewState() State {
-	return make(map[string]struct {
+func NewState() *State {
+	var s State
+	s = make(map[string]struct {
 		LastUpdate uint64
 		Value interface{}
 	})
+	return &s
 }
 
 //Answer of StateKeeper's get requests
