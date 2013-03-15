@@ -15,6 +15,12 @@ type Config struct {
 		//File for logging (stderr if empty)
 		File string
 	}
+	//Debug and statistics
+	Debug struct {
+		//Addr for debug and statistic information
+		//e.g. "localhost:6060" (default)
+		Addr string
+	}
 	//Workers
 	Workers struct {
 		//Count of workers
@@ -57,6 +63,9 @@ func SetConfigDefaults(cfg *Config) error {
 	if cfg.Http.Addr == "" { cfg.Http.Addr = ":4000" }
 
 	//Section [Log]
+
+	//Section [Debug]
+	if cfg.Debug.Addr == "" { cfg.Debug.Addr = "localhost:6060" }
 
 	//Section [SendBuffer]
 	if cfg.SendBuffer.SleepTime == 0.0 { cfg.SendBuffer.SleepTime = 10.0 }

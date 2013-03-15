@@ -11,6 +11,13 @@ import (
 
 import "hammy"
 
+//Debug and statistics
+import (
+	"net/http"
+	_ "net/http/pprof"
+	_ "expvar"
+)
+
 //Parse comand-line and fill config
 func loadConfig(cfg *hammy.Config) {
 	var configFile string
@@ -53,6 +60,10 @@ func main() {
 	}
 
 	log.Printf("Initializing...")
+
+	go func() {
+		log.Println(http.ListenAndServe(cfg.Debug.Addr, nil))
+	}()
 
 	tg, err := hammy.NewCouchbaseTriggersGetter(cfg)
 	if err != nil {

@@ -5,7 +5,15 @@ import (
 	"time"
 	"fmt"
 	"reflect"
+	"expvar"
 )
+
+//Global request counter
+var requestHandlerImplCounter *expvar.Int
+
+func init() {
+	requestHandlerImplCounter = expvar.NewInt("RequestHandlerImplCounter")
+}
 
 //Main data processor implementation
 type RequestHandlerImpl struct {
@@ -29,9 +37,13 @@ func (rh *RequestHandlerImpl) Handle(data IncomingData) (errs map[string]error) 
 	//Allocate return value
 	errs = make(map[string]error)
 
+	//Is in possible?... May be...
 	if (len(data) == 0) {
 		return
 	}
+
+	//Update global statistcs
+	requestHandlerImplCounter.Add(1)
 
 	//Step 1: Loading triggers
 	keys := make([]string, len(data))

@@ -4,20 +4,49 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"expvar"
 	"net/http"
 	"encoding/json"
 	"github.com/ugorji/go-msgpack"
 )
 
-//Request handler object
+//Golbal http request counter
+var httpServerCounter *expvar.Int
+//200-code responses
+var httpServer200Couner *expvar.Int
+//400-code responses
+var httpServer400Couner *expvar.Int
+//500-code responses
+var httpServer500Couner *expvar.Int
+//Global timer
+var httpServerTime *expvar.Float
+
+func init() {
+	httpServerCounter = expvar.NewInt("HttpServerCounter")
+	httpServer200Couner = expvar.NewInt("HttpServer200Couner")
+	httpServer400Couner = expvar.NewInt("HttpServer400Couner")
+	httpServer500Couner = expvar.NewInt("HttpServer500Couner")
+	httpServerTime = expvar.NewFloat("HttpServerTime")
+}
+
+//Http server object
 type HttpServer struct{
+	//Request handler  object
 	RHandler RequestHandler
 }
 
 //Request handler
-func (h HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	//statistics
+	httpServerCounter.Add(1)
+	before := time.Now()
+	defer func() {
+		httpServerTime.Add(time.Since(before).Seconds())
+	}()
+
 	if r.Method != "POST" {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		httpServer400Couner.Add(1)
 		return
 	}
 
@@ -42,6 +71,7 @@ func (h HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		default:
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			fmt.Fprintf(w, "Unsupported Content-Type\n")
+			httpServer400Couner.Add(1)
 			return
 	}
 
@@ -50,6 +80,7 @@ func (h HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		fmt.Fprintf(w, "%v\n", err);
+		httpServer400Couner.Add(1)
 		return
 	}
 
@@ -59,10 +90,12 @@ func (h HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		fmt.Fprintf(w, "%v\n", errs);
 		log.Printf("Internal Server Error: %v", errs)
+		httpServer500Couner.Add(1)
 		return
 	}
 
 	fmt.Fprint(w, "ok\n")
+	httpServer200Couner.Add(1)
 }
 
 //Start http interface and lock goroutine untill fatal error
