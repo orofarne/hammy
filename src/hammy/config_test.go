@@ -14,7 +14,8 @@ func TestSetConfigDefaults(t *testing.T) {
 	cfg.CouchbaseTriggers.Bucket = "default"
 	cfg.CouchbaseStates.ConnectTo = "http://localhost:8091/"
 	cfg.CouchbaseStates.Bucket = "default"
-
+	cfg.CouchbaseSaver.ConnectTo = "http://localhost:8091/"
+	cfg.CouchbaseSaver.Bucket = "default"
 
 	//Retry...
 	err = SetConfigDefaults(&cfg)

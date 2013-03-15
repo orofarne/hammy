@@ -1,12 +1,16 @@
 package hammy
 
-import "fmt"
-import "log"
-import "time"
+import (
+	"fmt"
+	"log"
+	"time"
+)
 
 type CmdBufferProcessorImpl struct {
 	//Send buffer
 	SBuffer SendBuffer
+	//Data saver
+	Saver SendBuffer
 }
 
 func (cbp *CmdBufferProcessorImpl) Process(key string, cmdb *CmdBuffer) error {
@@ -16,6 +20,8 @@ func (cbp *CmdBufferProcessorImpl) Process(key string, cmdb *CmdBuffer) error {
 				log.Printf("[%s] %s", key, c.Options["message"])
 			case "send":
 				cbp.processSend(key, c.Options)
+			case "save":
+				cbp.processSave(key, c.Options)
 			default:
 				log.Printf("[%s] %s %v", key, c.Cmd, c.Options)
 		}
@@ -60,4 +66,41 @@ func (cbp *CmdBufferProcessorImpl) processSend(key string, opts map[string]strin
 	data[objName] = objData
 
 	cbp.SBuffer.Push(&data)
+}
+
+func (cbp *CmdBufferProcessorImpl) processSave(key string, opts map[string]string) {
+	itemKey := opts["key"]
+	if itemKey == "" {
+		cbp.log(key, fmt.Sprintf("Invalid save: key expected (command options: %v)", opts))
+		return
+	}
+
+	value, valueFound := opts["value"]
+	if !valueFound {
+		cbp.log(key, fmt.Sprintf("Invalid save: value expected (command options: %v)", opts))
+		return
+	}
+
+	var ts uint64
+	ts_s := opts["timestamp"]
+	if ts_s == "" {
+		ts = uint64(time.Now().Unix())
+	} else {
+		_, err := fmt.Sscan(ts_s, &ts)
+		if err != nil {
+			cbp.log(key, fmt.Sprintf("Invalid save: invalid timestamp (command options: %v)", opts))
+			return
+		}
+	}
+
+	data := make(IncomingData)
+	objData := make(IncomingObjectData)
+	objValue := IncomingValueData{
+		Timestamp: ts,
+		Value: value,
+	}
+	objData[itemKey] = []IncomingValueData{objValue}
+	data[key] = objData
+
+	cbp.Saver.Push(&data)
 }

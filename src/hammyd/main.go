@@ -90,6 +90,13 @@ func main() {
 	go sb.Listen()
 	cbp.SBuffer = sb
 
+	saver, err := hammy.NewCouchbaseSaver(cfg)
+	if err != nil {
+		log.Fatal("CouchbaseSaver: %v", err)
+	}
+	cbp.Saver = saver
+
+	log.Printf("done.")
 	log.Printf("Starting HTTP interface...")
 	err = hammy.StartHttp(&rh, cfg)
 	log.Fatal(err)

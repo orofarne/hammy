@@ -54,6 +54,19 @@ type Config struct {
 		//TTL in seconds, default 86400
 		Ttl int
 	}
+	//Data saver
+	CouchbaseSaver struct {
+		//e.g. "http://dev-couchbase.example.com:8091/"
+		ConnectTo string
+		//e.g. "default"
+		Pool string
+		//e.g. "default"
+		Bucket string
+		//Internal write queue size
+		QueueSize uint
+		//Connections for saving
+		SavePoolSize uint
+	}
 }
 
 //Setup defaults for empty values in configs
@@ -85,6 +98,13 @@ func SetConfigDefaults(cfg *Config) error {
 	if cfg.CouchbaseStates.Pool == "" { cfg.CouchbaseStates.Pool = "default" }
 	if cfg.CouchbaseStates.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseStates.Bucket") }
 	if cfg.CouchbaseStates.Ttl == 0 { cfg.CouchbaseStates.Ttl = 86400 }
+
+	//Section [CouchbaseSaver]
+	if cfg.CouchbaseSaver.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseSaver.ConnectTo") }
+	if cfg.CouchbaseSaver.Pool == "" { cfg.CouchbaseSaver.Pool = "default" }
+	if cfg.CouchbaseSaver.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseSaver.Bucket") }
+	if cfg.CouchbaseSaver.QueueSize == 0 { cfg.CouchbaseSaver.QueueSize = 10000 }
+	if cfg.CouchbaseSaver.SavePoolSize == 0 { cfg.CouchbaseSaver.SavePoolSize = 10 }
 
 	return nil
 }

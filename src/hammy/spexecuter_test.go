@@ -65,7 +65,7 @@ func createTestProgramm() (string, error) {
 	}
 
 	defer func() {
-		//_ = os.Remove(progSourceFile)
+		_ = os.Remove(progSourceFile)
 	}()
 
 	_, err = f.WriteString(code)
