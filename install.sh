@@ -12,5 +12,5 @@ cp -R "$SRCROOT/src" "$SRCROOT/ruby" "$PREFIX"
 export GOPATH="$PREFIX"
 cd "$PREFIX"
 go run "$SRCROOT/bootstrap.go"
-go test hammy && go install hammy hammyd hammycid
+go test hammy && go install hammy hammyd hammycid hammydatad
 cd -
