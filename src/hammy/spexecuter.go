@@ -106,6 +106,30 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 		panic("nil worker")
 	}
 
+	if worker.Cmd != nil {
+		// Check process state
+		var status syscall.WaitStatus
+
+		// We can't use worker.ProcessState (it's available only after a call to Wait or Run)
+		wpid, err := syscall.Wait4(worker.Process.Pid, &status, syscall.WNOHANG, nil)
+
+		switch {
+			case err == nil && wpid == 0:
+				// Do nothing
+			case err == nil && status.Exited():
+				worker.Cmd = nil
+			case err != nil:
+				log.Printf("SPExecuter: syscall.Wait4 error: %#v", err)
+				err = worker.Process.Kill()
+				if err != nil {
+					log.Printf("SPExecuter: Process.Kill error: %#v", err)
+				}
+				worker.Cmd = nil
+			default:
+				// Do nothing
+		}
+	}
+
 	if worker.Cmd == nil {
 		// Creating new subprocess
 		worker.Count = 0
@@ -133,28 +157,13 @@ func (e *SPExecuter) freeWorker(worker *process) {
 	// Increment count of execution for the worker
 	worker.Count++
 
-	// Check process state
-	var status syscall.WaitStatus
-
-	// We can't use worker.ProcessState (it's available only after a call to Wait or Run)
-	wpid, err := syscall.Wait4(worker.Process.Pid, &status, syscall.WNOHANG, nil)
-
-	switch {
-		case err != nil:
-			log.Printf("SPExecuter: syscall.Wait4 error: %#v", err)
-			fallthrough
-		case worker.Count >= e.MaxIter: // Check iteration count
-			err = worker.Process.Kill()
-			if err != nil {
-				log.Printf("SPExecuter: Process.Kill error: %#v", err)
-			}
-			worker.Cmd = nil
-		case err == nil && wpid == 0:
-			// Do nothing
-		case err == nil && status.Exited():
-			worker.Cmd = nil
-		default:
-			// Do nothing
+	// Check iteration count
+	if worker.Count >= e.MaxIter {
+		err := worker.Process.Kill()
+		if err != nil {
+			log.Printf("SPExecuter: Process.Kill error: %#v", err)
+		}
+		worker.Cmd = nil
 	}
 
 	// Return worker to the queue

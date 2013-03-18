@@ -21,7 +21,7 @@ var testWorker1 = `
 	)
 
 	func main() {
-		for {
+		for i := 0; i < 5; i++ {
 			var input hammy.WorkerProcessInput
 			cmd1opt := make(map[string]string)
 			cmd2opt := make(map[string]string)
@@ -196,3 +196,63 @@ func TestSPExecuterKills(t *testing.T) {
 		t.Errorf("Pid not changed")
 	}
 }
+
+/*
+func TestSPExecuterDeads(t *testing.T) {
+	t.Logf("GOPATH = %v", os.Getenv("GOPATH"))
+
+	prog, err := createTestProgramm(testWorker1)
+	if err != nil {
+		t.Fatalf("Error creating test programm: %#v", err)
+	}
+	defer func() {
+		os.Remove(prog)
+	}()
+
+	cfg := Config{}
+	cfg.Workers.PoolSize = 1
+	cfg.Workers.CmdLine = prog
+	cfg.Workers.MaxIter = 100
+
+	e := NewSPExecuter(cfg)
+
+	prevPid := ""
+	pidChanged := false
+
+	for i := 0; i < 7; i++ {
+		key := "test1"
+		trigger := `sss@^&%GGGkll""''`
+		state := State{}
+		data := IncomingObjectData{}
+
+		newState, cmdb, err := e.ProcessTrigger(key, trigger, &state, data)
+		if err != nil {
+			t.Fatalf("ProcessTrigger error: %#v", err)
+		}
+		_ = newState
+
+		if len(*cmdb) != 3 {
+			t.Fatalf("Invalid size of cmdb: %#v", cmdb)
+		}
+
+		if (*cmdb)[0].Cmd != "cmd1" || (*cmdb)[0].Options["message"] != "Hello" ||
+			(*cmdb)[1].Cmd != "cmd2" || (*cmdb)[1].Options["message"] != "World" ||
+			(*cmdb)[2].Cmd != "cmd3" || (*cmdb)[2].Options["pid"] == "" {
+			t.Errorf("Invalid cmdb: %#v", cmdb)
+		}
+
+		newPid := (*cmdb)[2].Options["pid"]
+		if prevPid == "" {
+			prevPid = newPid
+		} else {
+			if newPid != prevPid {
+				pidChanged = true
+			}
+		}
+	}
+
+	if !pidChanged {
+		t.Errorf("Pid not changed")
+	}
+}
+*/
