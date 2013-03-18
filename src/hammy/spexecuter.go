@@ -130,6 +130,9 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 
 // Return worker to buffer
 func (e *SPExecuter) freeWorker(worker *process) {
+	// Increment count of execution for the worker
+	worker.Count++
+
 	// Check process state
 	var status syscall.WaitStatus
 
@@ -137,9 +140,6 @@ func (e *SPExecuter) freeWorker(worker *process) {
 	wpid, err := syscall.Wait4(worker.Process.Pid, &status, syscall.WNOHANG, nil)
 
 	switch {
-		case err == nil && wpid == 0:
-		case err == nil && status.Exited():
-			worker.Cmd = nil
 		case err != nil:
 			log.Printf("SPExecuter: syscall.Wait4 error: %#v", err)
 			fallthrough
@@ -149,8 +149,14 @@ func (e *SPExecuter) freeWorker(worker *process) {
 				log.Printf("SPExecuter: Process.Kill error: %#v", err)
 			}
 			worker.Cmd = nil
+		case err == nil && wpid == 0:
+			// Do nothing
+		case err == nil && status.Exited():
+			worker.Cmd = nil
 		default:
+			// Do nothing
 	}
 
+	// Return worker to the queue
 	e.Workers <- worker
 }
