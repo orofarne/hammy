@@ -48,6 +48,8 @@ type Config struct {
 	}
 	// Coucbase for triggers configuration
 	CouchbaseTriggers struct {
+		// Use this implementation
+		Active bool
 		// e.g. "http://dev-couchbase.example.com:8091/"
 		ConnectTo string
 		// e.g. "default"
@@ -57,6 +59,8 @@ type Config struct {
 	}
 	// Coucbase for state storage
 	CouchbaseStates struct {
+		// Use this implementation
+		Active bool
 		// e.g. "http://dev-couchbase.example.com:8091/"
 		ConnectTo string
 		// e.g. "default"
@@ -68,6 +72,8 @@ type Config struct {
 	}
 	// Data saver
 	CouchbaseSaver struct {
+		// Use this implementation
+		Active bool
 		// e.g. "http://dev-couchbase.example.com:8091/"
 		ConnectTo string
 		// e.g. "default"
@@ -81,6 +87,8 @@ type Config struct {
 	}
 	// Data reader
 	CouchbaseDataReader struct {
+		// Use this implementation
+		Active bool
 		// e.g. "http://dev-couchbase.example.com:8091/"
 		ConnectTo string
 		// e.g. "default"
@@ -114,27 +122,38 @@ func SetConfigDefaults(cfg *Config) error {
 	if cfg.Workers.MaxIter == 0 { cfg.Workers.MaxIter = 1000 }
 
 	// Section [CouchbaseTriggers]
-	if cfg.CouchbaseTriggers.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseTriggers.ConnectTo") }
-	if cfg.CouchbaseTriggers.Pool == "" { cfg.CouchbaseTriggers.Pool = "default" }
-	if cfg.CouchbaseTriggers.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseTriggers.Bucket") }
+	if cfg.CouchbaseTriggers.Active {
+		if cfg.CouchbaseTriggers.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseTriggers.ConnectTo") }
+		if cfg.CouchbaseTriggers.Pool == "" { cfg.CouchbaseTriggers.Pool = "default" }
+		if cfg.CouchbaseTriggers.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseTriggers.Bucket") }
+	}
 
 	// Section [CouchbaseStates]
-	if cfg.CouchbaseStates.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseStates.ConnectTo") }
-	if cfg.CouchbaseStates.Pool == "" { cfg.CouchbaseStates.Pool = "default" }
-	if cfg.CouchbaseStates.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseStates.Bucket") }
-	if cfg.CouchbaseStates.Ttl == 0 { cfg.CouchbaseStates.Ttl = 86400 }
+	if cfg.CouchbaseStates.Active {
+		if cfg.CouchbaseStates.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseStates.ConnectTo") }
+		if cfg.CouchbaseStates.Pool == "" { cfg.CouchbaseStates.Pool = "default" }
+		if cfg.CouchbaseStates.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseStates.Bucket") }
+		if cfg.CouchbaseStates.Ttl == 0 { cfg.CouchbaseStates.Ttl = 86400 }
+	}
 
 	// Section [CouchbaseSaver]
-	if cfg.CouchbaseSaver.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseSaver.ConnectTo") }
-	if cfg.CouchbaseSaver.Pool == "" { cfg.CouchbaseSaver.Pool = "default" }
-	if cfg.CouchbaseSaver.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseSaver.Bucket") }
-	if cfg.CouchbaseSaver.QueueSize == 0 { cfg.CouchbaseSaver.QueueSize = 10000 }
-	if cfg.CouchbaseSaver.SavePoolSize == 0 { cfg.CouchbaseSaver.SavePoolSize = 10 }
+	if cfg.CouchbaseSaver.Active {
+		if cfg.CouchbaseSaver.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseSaver.ConnectTo") }
+		if cfg.CouchbaseSaver.Pool == "" { cfg.CouchbaseSaver.Pool = "default" }
+		if cfg.CouchbaseSaver.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseSaver.Bucket") }
+		if cfg.CouchbaseSaver.QueueSize == 0 { cfg.CouchbaseSaver.QueueSize = 10000 }
+		if cfg.CouchbaseSaver.SavePoolSize == 0 { cfg.CouchbaseSaver.SavePoolSize = 10 }
+	}
 
 	// Section [CouchbaseDataReader]
-	if cfg.CouchbaseDataReader.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseDataReader.ConnectTo") }
-	if cfg.CouchbaseDataReader.Pool == "" { cfg.CouchbaseDataReader.Pool = "default" }
-	if cfg.CouchbaseDataReader.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseDataReader.Bucket") }
+	if cfg.CouchbaseDataReader.Active {
+		if cfg.CouchbaseDataReader.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseDataReader.ConnectTo") }
+		if cfg.CouchbaseDataReader.Pool == "" { cfg.CouchbaseDataReader.Pool = "default" }
+		if cfg.CouchbaseDataReader.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseDataReader.Bucket") }
+	}
+
+	// Counts
+	//TODO
 
 	return nil
 }

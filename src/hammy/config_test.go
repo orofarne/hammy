@@ -4,6 +4,11 @@ import "testing"
 
 func TestSetConfigDefaults(t *testing.T) {
 	var cfg Config
+	cfg.CouchbaseTriggers.Active = true
+	cfg.CouchbaseStates.Active = true
+	cfg.CouchbaseSaver.Active = true
+	cfg.CouchbaseDataReader.Active = true
+
 	err := SetConfigDefaults(&cfg)
 	if err == nil {
 		t.Errorf("Error should not be nil")
@@ -36,5 +41,41 @@ func TestSetConfigDefaults(t *testing.T) {
 	}
 	if cfg.SendBuffer.SleepTime != 10.0 {
 		t.Errorf("cfg.SendBuffer.SleepTime = %#v, expected %#v", cfg.SendBuffer.SleepTime, 10.0)
+	}
+}
+
+func TestSetConfigDefaultsActives(t *testing.T) {
+	var cfg Config
+
+	err := SetConfigDefaults(&cfg)
+	if err == nil {
+		t.Errorf("Error should not be nil")
+	}
+
+	// Mandatory fields:
+	cfg.Workers.CmdLine = "/bin/ls"
+
+	// Retry...
+	err = SetConfigDefaults(&cfg)
+	if err != nil {
+		t.Fatalf("Error: %v", err)
+	}
+
+	// Activate CouchbaseTriggers
+	cfg.CouchbaseTriggers.Active = true
+
+	err = SetConfigDefaults(&cfg)
+	if err == nil {
+		t.Errorf("Error should not be nil")
+	}
+
+	// Mandatory fields:
+	cfg.CouchbaseTriggers.ConnectTo = "http://localhost:8091/"
+	cfg.CouchbaseTriggers.Bucket = "default"
+
+	// Retry...
+	err = SetConfigDefaults(&cfg)
+	if err != nil {
+		t.Fatalf("Error: %v", err)
 	}
 }
