@@ -6,10 +6,6 @@ import (
 	"container/list"
 )
 
-type SendBuffer interface {
-	Push(data *IncomingData)
-}
-
 // Buffer for reprocessed data
 type SendBufferImpl struct {
 	dataChan chan *IncomingData

@@ -38,11 +38,6 @@ type RequestHandler interface {
 	Handle(data IncomingData) map[string]error
 }
 
-// Interface for trigger configuration
-type TriggersGetter interface {
-	MGet(keys []string) (triggers map[string]string, err error)
-}
-
 // Type for state of an object
 // maps keys to values with timestamps of last update
 // Format (in json notation):
@@ -67,18 +62,4 @@ func NewState() *State {
 		Value interface{}
 	})
 	return &s
-}
-
-// Answer of StateKeeper's get requests
-type StateKeeperAnswer struct {
-	State
-	Cas *uint64
-	Err error
-}
-
-// Interface for state storage
-type StateKeeper interface {
-	Get(key string) StateKeeperAnswer
-	MGet(keys []string) map[string]StateKeeperAnswer
-	Set(key string, data State, cas *uint64) (retry bool, err error)
 }

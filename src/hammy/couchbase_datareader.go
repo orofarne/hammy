@@ -9,11 +9,6 @@ import (
 	"github.com/dustin/gomemcached"
 )
 
-// Reads data from write cache or storage
-type DataReader interface {
-	Read(objKey string, itemKey string, from uint64, to uint64) (data []IncomingValueData, err error)
-}
-
 // Reads data from write cache (couchbase-based)
 type CouchbaseDataReader struct {
 	client *couchbase.Client

@@ -153,7 +153,46 @@ func SetConfigDefaults(cfg *Config) error {
 	}
 
 	// Counts
-	//TODO
+	// 1) TriggersGetter
+	{
+		k := 0
+
+		if cfg.CouchbaseTriggers.Active { k++ }
+
+		if k != 1 {
+			return fmt.Errorf("Invalid count of active TriggersGetter drivers: %d", k)
+		}
+	}
+	// 2) StateKeeper
+	{
+		k := 0
+
+		if cfg.CouchbaseStates.Active { k++ }
+
+		if k != 1 {
+			return fmt.Errorf("Invalid count of active StateKeeper drivers: %d", k)
+		}
+	}
+	// 3) DataSaver
+	{
+		k := 0
+
+		if cfg.CouchbaseSaver.Active { k++ }
+
+		if k != 1 {
+			return fmt.Errorf("Invalid count of active DataSaver drivers: %d", k)
+		}
+	}
+	// 4) DataReader
+	{
+		k := 0
+
+		if cfg.CouchbaseDataReader.Active { k++ }
+
+		if k != 1 {
+			return fmt.Errorf("Invalid count of active DataReader drivers: %d", k)
+		}
+	}
 
 	return nil
 }
