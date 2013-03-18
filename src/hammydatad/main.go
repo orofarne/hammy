@@ -117,8 +117,7 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if obj == "__test" {
 		dataReader = &TestDataReader{}
 	} else {
-		http.Error(w, "Not Found", http.StatusNotFound)
-		return
+		dataReader = h.DReader
 	}
 
 	data, err := dataReader.Read(obj, key, from, to)
@@ -204,7 +203,6 @@ func main() {
 	go func() {
 		log.Println(http.ListenAndServe(cfg.Debug.HammyDataDAddr, nil))
 	}()
-
 
 	dr, err := hammy.NewCouchbaseDataReader(cfg)
 	if err != nil {

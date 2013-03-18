@@ -8,6 +8,7 @@ func TestSetConfigDefaults(t *testing.T) {
 	if err == nil {
 		t.Errorf("Error should not be nil")
 	}
+
 	//Mandatory fields:
 	cfg.Workers.CmdLine = "/bin/ls"
 	cfg.CouchbaseTriggers.ConnectTo = "http://localhost:8091/"
