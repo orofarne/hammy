@@ -24,14 +24,14 @@ func (rh *RequestHandlerTestImpl) Handle(data IncomingData) (errs map[string]err
 
 func TestHttpInterface(t *testing.T) {
 	var cfg Config
-	cfg.Http.Addr = "127.0.0.1:16739"
+	cfg.IncomingHttp.Addr = "127.0.0.1:16739"
 	SetConfigDefaults(&cfg)
 	rh := new(RequestHandlerTestImpl)
 
 	go StartHttp(rh, cfg)
 	time.Sleep(100 * time.Millisecond)
 
-	httpAddr := "http://" + cfg.Http.Addr + "/"
+	httpAddr := "http://" + cfg.IncomingHttp.Addr + "/"
 
 	// Simple test (Empty but valid data)
 	buf := bytes.NewBufferString("{}")

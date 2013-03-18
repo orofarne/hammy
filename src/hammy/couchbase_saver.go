@@ -9,6 +9,7 @@ import (
 	"github.com/dustin/gomemcached/client"
 )
 
+//Saves historical data to write chache (based on couchbase)
 type CouchbaseSaver struct {
 	client *couchbase.Client
 	pool *couchbase.Pool
@@ -53,9 +54,11 @@ func (s *CouchbaseSaver) Push(data *IncomingData) {
 	s.dataChan <- data
 }
 
+const CouchbaseDataBucketQuantum = 7200 //2 hours
+
 func CouchbaseSaverBucketKey(objKey string, itemKey string, timestamp uint64) string {
 	var bucketId uint64
-	bucketId = timestamp / 7200 //2 hours
+	bucketId = timestamp / CouchbaseDataBucketQuantum
 	return fmt.Sprintf("%s$%s$%d", objKey, itemKey, bucketId)
 }
 

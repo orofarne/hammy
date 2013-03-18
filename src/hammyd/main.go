@@ -48,8 +48,8 @@ func main() {
 		log.Fatalf("Inavalid config: %v", err)
 	}
 
-	if cfg.Log.File != "" {
-		logf, err := os.OpenFile(cfg.Log.File,
+	if cfg.Log.HammyDFile != "" {
+		logf, err := os.OpenFile(cfg.Log.HammyDFile,
 			os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0666)
 
 		if err != nil {
@@ -62,7 +62,7 @@ func main() {
 	log.Printf("Initializing...")
 
 	go func() {
-		log.Println(http.ListenAndServe(cfg.Debug.Addr, nil))
+		log.Println(http.ListenAndServe(cfg.Debug.HammyDAddr, nil))
 	}()
 
 	tg, err := hammy.NewCouchbaseTriggersGetter(cfg)

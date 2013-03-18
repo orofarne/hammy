@@ -106,7 +106,7 @@ func StartHttp(rh RequestHandler, cfg Config) error {
 
 	//Setup server
 	s := &http.Server{
-		Addr:				cfg.Http.Addr,
+		Addr:				cfg.IncomingHttp.Addr,
 		Handler:			h,
 		ReadTimeout:		30 * time.Second,
 		WriteTimeout:		30 * time.Second,
