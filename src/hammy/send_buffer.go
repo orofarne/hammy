@@ -10,16 +10,16 @@ type SendBuffer interface {
 	Push(data *IncomingData)
 }
 
-//Buffer for reprocessed data
+// Buffer for reprocessed data
 type SendBufferImpl struct {
 	dataChan chan *IncomingData
 	data *list.List
-	//Timeout between sends
+	// Timeout between sends
 	sleepTime time.Duration
 	rHandler RequestHandler
 }
 
-//Creates and initialize new SendBuffer
+// Creates and initialize new SendBuffer
 func NewSendBufferImpl(rh RequestHandler, cfg Config) (sb *SendBufferImpl) {
 	sb = new(SendBufferImpl)
 	sb.dataChan = make(chan *IncomingData)
@@ -29,7 +29,7 @@ func NewSendBufferImpl(rh RequestHandler, cfg Config) (sb *SendBufferImpl) {
 	return
 }
 
-//Locks and begins data processing
+// Locks and begins data processing
 func (sb *SendBufferImpl) Listen() {
 	timer := time.Tick(sb.sleepTime)
 
@@ -44,22 +44,22 @@ func (sb *SendBufferImpl) Listen() {
 	}
 }
 
-//Enqueue data for reprocessing
+// Enqueue data for reprocessing
 func (sb *SendBufferImpl) Push(data *IncomingData) {
 	sb.dataChan <- data
 }
 
-//Process detached data buffer
+// Process detached data buffer
 func (sb *SendBufferImpl) send(data *list.List) {
 	if data.Len() == 0 {
 		return
 	}
 
-	//1) Merge list
+	// 1) Merge list
 	mData := make(IncomingData)
-	//iterates over data list
+	// iterates over data list
 	for e := data.Front(); e != nil; e = e.Next() {
-		//e.Value is *IncomingData (panic otherwise)
+		// e.Value is *IncomingData (panic otherwise)
 		eData := e.Value.(*IncomingData)
 		for objK, objV := range *eData {
 			mV, objFound := mData[objK]
@@ -85,10 +85,10 @@ func (sb *SendBufferImpl) send(data *list.List) {
 		}
 	}
 
-	//2) Process merged data
+	// 2) Process merged data
 	errs := sb.rHandler.Handle(mData)
 
 	if len(errs) > 0 {
-		log.Printf("!! Error in SendBuffer: %v", errs) //FIXME
+		log.Printf("!! Error in SendBuffer: %v", errs) // FIXME
 	}
 }

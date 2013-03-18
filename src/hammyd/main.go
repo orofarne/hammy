@@ -11,14 +11,14 @@ import (
 
 import "hammy"
 
-//Debug and statistics
+// Debug and statistics
 import (
 	"net/http"
 	_ "net/http/pprof"
 	_ "expvar"
 )
 
-//Parse comand-line and fill config
+// Parse comand-line and fill config
 func loadConfig(cfg *hammy.Config) {
 	var configFile string
 

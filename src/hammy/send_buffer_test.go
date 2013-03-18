@@ -66,7 +66,7 @@ func TestSendBufferSimple(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	//Check data
+	// Check data
 	if obj1, found := rh.Data["object1"]; !found {
 		t.Errorf("`object1` not found")
 	} else {

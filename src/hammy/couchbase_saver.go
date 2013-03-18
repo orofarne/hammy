@@ -9,7 +9,7 @@ import (
 	"github.com/dustin/gomemcached/client"
 )
 
-//Saves historical data to write chache (based on couchbase)
+// Saves historical data to write chache (based on couchbase)
 type CouchbaseSaver struct {
 	client *couchbase.Client
 	pool *couchbase.Pool
@@ -17,7 +17,7 @@ type CouchbaseSaver struct {
 	dataChan chan *IncomingData
 }
 
-//Create new saver
+// Create new saver
 func NewCouchbaseSaver(cfg Config) (*CouchbaseSaver, error) {
 	s := new(CouchbaseSaver)
 
@@ -39,9 +39,9 @@ func NewCouchbaseSaver(cfg Config) (*CouchbaseSaver, error) {
 	}
 	s.bucket = b
 
-	//Process queue
+	// Process queue
 	s.dataChan = make(chan *IncomingData, cfg.CouchbaseSaver.QueueSize)
-	//Workers...
+	// Workers...
 	for i := uint(0); i < cfg.CouchbaseSaver.SavePoolSize; i++ {
 		go s.worker()
 	}
@@ -49,12 +49,12 @@ func NewCouchbaseSaver(cfg Config) (*CouchbaseSaver, error) {
 	return s, nil
 }
 
-//Enqueue data for saving
+// Enqueue data for saving
 func (s *CouchbaseSaver) Push(data *IncomingData) {
 	s.dataChan <- data
 }
 
-const CouchbaseDataBucketQuantum = 7200 //2 hours
+const CouchbaseDataBucketQuantum = 7200 // 2 hours
 
 func CouchbaseSaverBucketKey(objKey string, itemKey string, timestamp uint64) string {
 	var bucketId uint64

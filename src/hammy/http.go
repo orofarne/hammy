@@ -10,15 +10,15 @@ import (
 	"github.com/ugorji/go-msgpack"
 )
 
-//Golbal http request counter
+// Golbal http request counter
 var httpServerCounter *expvar.Int
-//200-code responses
+// 200-code responses
 var httpServer200Couner *expvar.Int
-//400-code responses
+// 400-code responses
 var httpServer400Couner *expvar.Int
-//500-code responses
+// 500-code responses
 var httpServer500Couner *expvar.Int
-//Global timer
+// Global timer
 var httpServerTime *expvar.Float
 
 func init() {
@@ -29,15 +29,15 @@ func init() {
 	httpServerTime = expvar.NewFloat("HttpServerTime")
 }
 
-//Http server object
+// Http server object
 type HttpServer struct{
-	//Request handler  object
+	// Request handler  object
 	RHandler RequestHandler
 }
 
-//Request handler
+// Request handler
 func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//statistics
+	// statistics
 	httpServerCounter.Add(1)
 	before := time.Now()
 	defer func() {
@@ -86,7 +86,7 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	errs := h.RHandler.Handle(data)
 	if len(errs) > 0 {
-		//TODO: correct answer to client
+		// TODO: correct answer to client
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		fmt.Fprintf(w, "%v\n", errs);
 		log.Printf("Internal Server Error: %v", errs)
@@ -98,13 +98,13 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	httpServer200Couner.Add(1)
 }
 
-//Start http interface and lock goroutine untill fatal error
+// Start http interface and lock goroutine untill fatal error
 func StartHttp(rh RequestHandler, cfg Config) error {
 	h := &HttpServer{
 		RHandler: rh,
 	}
 
-	//Setup server
+	// Setup server
 	s := &http.Server{
 		Addr:				cfg.IncomingHttp.Addr,
 		Handler:			h,

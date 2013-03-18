@@ -1,2 +1,2 @@
-//Trigger processor for monitoring data
+// Trigger processor for monitoring data
 package hammy

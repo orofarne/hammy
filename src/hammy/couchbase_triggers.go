@@ -51,7 +51,7 @@ func (tg *CouchbaseTriggersGetter) MGet(keys []string) (triggers map[string]stri
 				}
 				triggers[k] = body
 			case gomemcached.KEY_ENOENT:
-				//nil
+				// nil
 			default:
 				err = fmt.Errorf("%s", r.Error())
 				return

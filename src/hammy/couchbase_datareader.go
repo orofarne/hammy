@@ -8,19 +8,19 @@ import (
 	"github.com/dustin/gomemcached"
 )
 
-//Reads data from write cache or storage
+// Reads data from write cache or storage
 type DataReader interface {
 	Read(objKey string, itemKey string, from uint64, to uint64) (data []IncomingValueData, err error)
 }
 
-//Reads data from write cache (couchbase-based)
+// Reads data from write cache (couchbase-based)
 type CouchbaseDataReader struct {
 	client *couchbase.Client
 	pool *couchbase.Pool
 	bucket *couchbase.Bucket
 }
 
-//Create new saver
+// Create new saver
 func NewCouchbaseDataReader(cfg Config) (*CouchbaseDataReader, error) {
 	s := new(CouchbaseDataReader)
 
@@ -62,7 +62,7 @@ func (ds *dataTimeSorter) Swap(i, j int) {
 }
 
 func (cr *CouchbaseDataReader) Read(objKey string, itemKey string, from uint64, to uint64) (data []IncomingValueData, err error) {
-	//Construct keys slice
+	// Construct keys slice
 	bucketFrom, bucketTo := (from / CouchbaseDataBucketQuantum), (to / CouchbaseDataBucketQuantum)
 	keys := make([]string, (bucketTo - bucketFrom + 1))
 	for i, k := 0, bucketFrom; k <= bucketTo; k++ {
@@ -70,7 +70,7 @@ func (cr *CouchbaseDataReader) Read(objKey string, itemKey string, from uint64, 
 		i++
 	}
 
-	//Retrive data
+	// Retrive data
 	ans := cr.bucket.GetBulk(keys)
 	dataLen := 0
 
@@ -79,7 +79,7 @@ func (cr *CouchbaseDataReader) Read(objKey string, itemKey string, from uint64, 
 			case gomemcached.SUCCESS:
 				dataLen += len(r.Body)
 			case gomemcached.KEY_ENOENT:
-				//nil
+				// nil
 			default:
 				err = fmt.Errorf("%s", r.Error())
 				return

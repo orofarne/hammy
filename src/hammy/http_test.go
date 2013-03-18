@@ -162,7 +162,7 @@ func TestHttpInterface(t *testing.T) {
 	}
 	checkTestData()
 
-	//Invalid
+	// Invalid
 	buf = bytes.NewBufferString(`{
 		"object1": {
 			"key1": "booo!"

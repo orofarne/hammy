@@ -8,44 +8,44 @@ import (
 	"expvar"
 )
 
-//Global request counter
+// Global request counter
 var requestHandlerImplCounter *expvar.Int
 
 func init() {
 	requestHandlerImplCounter = expvar.NewInt("RequestHandlerImplCounter")
 }
 
-//Main data processor implementation
+// Main data processor implementation
 type RequestHandlerImpl struct {
-	//Interface for triggers retriving
+	// Interface for triggers retriving
 	TGetter TriggersGetter
-	//Interface for state storage
+	// Interface for state storage
 	SKeeper StateKeeper
-	//Interface for executer
+	// Interface for executer
 	Exec Executer
-	//Interface for command commiter
+	// Interface for command commiter
 	CBProcessor CmdBufferProcessor
 }
 
-//Internal struct for processing result
+// Internal struct for processing result
 type objectProcessResult struct {
 	Key string
 	Err error
 }
 
 func (rh *RequestHandlerImpl) Handle(data IncomingData) (errs map[string]error) {
-	//Allocate return value
+	// Allocate return value
 	errs = make(map[string]error)
 
-	//Is in possible?... May be...
+	// Is in possible?... May be...
 	if (len(data) == 0) {
 		return
 	}
 
-	//Update global statistcs
+	// Update global statistcs
 	requestHandlerImplCounter.Add(1)
 
-	//Step 1: Loading triggers
+	// Step 1: Loading triggers
 	keys := make([]string, len(data))
 	i := 0
 	for k, _ := range data {
@@ -65,7 +65,7 @@ func (rh *RequestHandlerImpl) Handle(data IncomingData) (errs map[string]error) 
 		return
 	}
 
-	//fix keys array
+	// fix keys array
 	keys = make([]string, len(triggers))
 	i = 0
 	for k := range triggers {
@@ -73,15 +73,15 @@ func (rh *RequestHandlerImpl) Handle(data IncomingData) (errs map[string]error) 
 		i++
 	}
 
-	//Step 2: Loading state
+	// Step 2: Loading state
 	states := rh.SKeeper.MGet(keys)
 	if len(states) != len(triggers) {
 		panic(fmt.Sprintf("Invalid length of StateKeeper answer (%v states for %v triggers)",
 				len(states), len(triggers)))
 	}
 
-	//Step 3: Start trigger processing
-	c := make(chan objectProcessResult) //result chanel
+	// Step 3: Start trigger processing
+	c := make(chan objectProcessResult) // result chanel
 	runningTasks := 0
 	for key, tr := range triggers {
 		state := states[key]
@@ -94,7 +94,7 @@ func (rh *RequestHandlerImpl) Handle(data IncomingData) (errs map[string]error) 
 		}
 	}
 
-	//Step 4: Waiting until all triggers done
+	// Step 4: Waiting until all triggers done
 	if runningTasks > 0 {
 		for res := range c {
 			if res.Err != nil {
@@ -129,7 +129,7 @@ func (rh *RequestHandlerImpl) processTrigger(
 		return
 	}
 
-	//Save state if it changes
+	// Save state if it changes
 	if !StatesEq(newState, &state) {
 		retry, err := rh.SKeeper.Set(key, *newState, cas)
 		if err != nil {
@@ -137,17 +137,17 @@ func (rh *RequestHandlerImpl) processTrigger(
 			return
 		}
 		if retry {
-			//Ooops! Collision!
-			//Starting loop of retries
+			// Ooops! Collision!
+			// Starting loop of retries
 			rand.Seed( time.Now().UTC().UnixNano())
 			for {
-				//random sleep
+				// random sleep
 				t := rand.Intn(100)
 				if t > 50 {
 					time.Sleep(time.Duration(t) * time.Millisecond)
 				}
 
-				//Retry...
+				// Retry...
 				ans := rh.SKeeper.Get(key)
 				if ans.Err != nil {
 					ret.Err = fmt.Errorf("StateKeeper get operation failed: %v", ans.Err)
@@ -162,7 +162,7 @@ func (rh *RequestHandlerImpl) processTrigger(
 					return
 				}
 
-				//Save state if it changes
+				// Save state if it changes
 				if !StatesEq(newState, &state) {
 					retry, err = rh.SKeeper.Set(key, *newState, cas)
 					if err != nil {
@@ -170,7 +170,7 @@ func (rh *RequestHandlerImpl) processTrigger(
 						return
 					}
 					if !retry {
-						//Work is done! No more need to retry!
+						// Work is done! No more need to retry!
 						break
 					}
 				} else {
@@ -181,7 +181,7 @@ func (rh *RequestHandlerImpl) processTrigger(
 		}
 	}
 
-	//Commit cmdbuffer
+	// Commit cmdbuffer
 	err = rh.CBProcessor.Process(key, cmdb)
 	if err != nil {
 		ret.Err = fmt.Errorf("Failed to process cmdbuffer: %v", err)
@@ -191,8 +191,8 @@ func (rh *RequestHandlerImpl) processTrigger(
 	return
 }
 
-//Compare two States
-//true if equal, false otherwise
+// Compare two States
+// true if equal, false otherwise
 func StatesEq(a *State, b *State) bool {
 	return reflect.DeepEqual(a, b)
 }

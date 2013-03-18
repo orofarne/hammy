@@ -31,15 +31,15 @@ type WorkerProcessOutput struct {
 	State *State
 }
 
-//Executer implementation for subprocesses with MessagePack-based RPC
+// Executer implementation for subprocesses with MessagePack-based RPC
 type SPExecuter struct {
 	CmdLine string
 	MaxIter uint
 	Workers chan *process
 }
 
-//Create new instance of SPExecutor
-//per process
+// Create new instance of SPExecutor
+// per process
 func NewSPExecuter(cfg Config) *SPExecuter {
 	if cfg.Workers.PoolSize < 1 || cfg.Workers.CmdLine == "" {
 		panic("Invalid argument")
@@ -67,14 +67,14 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 		State: newState,
 	}
 
-	//Fetch worker (may be wait for free worker)
+	// Fetch worker (may be wait for free worker)
 	worker, err := e.getWorker()
 	if err != nil {
 		return
 	}
 	defer e.freeWorker(worker)
 
-	//marshal and send args
+	// marshal and send args
 	pInput := WorkerProcessInput{
 		Key: key,
 		Trigger: trigger,
@@ -88,7 +88,7 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 		return
 	}
 
-	//wait, read and unmarshal result
+	// wait, read and unmarshal result
 	dec := msgpack.NewDecoder(worker.Stdout, nil)
 	err = dec.Decode(&res)
 	if err != nil {
@@ -98,7 +98,7 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 	return
 }
 
-//Fetch worker (may be wait for free worker)
+// Fetch worker (may be wait for free worker)
 func (e *SPExecuter) getWorker() (worker *process, err error) {
 	worker = <- e.Workers
 
@@ -107,7 +107,7 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 	}
 
 	if worker.Cmd == nil {
-		//Creating new subprocess
+		// Creating new subprocess
 		worker.Count = 0
 		worker.Cmd = exec.Command(e.CmdLine)
 		worker.Stdin, err = worker.Cmd.StdinPipe()
@@ -128,12 +128,12 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 	return
 }
 
-//Return worker to buffer
+// Return worker to buffer
 func (e *SPExecuter) freeWorker(worker *process) {
-	//Check process state
+	// Check process state
 	var status syscall.WaitStatus
 
-	//We can't use worker.ProcessState (it's available only after a call to Wait or Run)
+	// We can't use worker.ProcessState (it's available only after a call to Wait or Run)
 	wpid, err := syscall.Wait4(worker.Process.Pid, &status, syscall.WNOHANG, nil)
 
 	switch {
@@ -143,7 +143,7 @@ func (e *SPExecuter) freeWorker(worker *process) {
 		case err != nil:
 			log.Printf("SPExecuter: syscall.Wait4 error: %#v", err)
 			fallthrough
-		case worker.Count >= e.MaxIter: //Check iteration count
+		case worker.Count >= e.MaxIter: // Check iteration count
 			err = worker.Process.Kill()
 			if err != nil {
 				log.Printf("SPExecuter: Process.Kill error: %#v", err)

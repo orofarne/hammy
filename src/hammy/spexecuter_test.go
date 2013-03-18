@@ -8,7 +8,7 @@ import (
 )
 
 func createTestProgramm() (string, error) {
-	//Source code
+	// Source code
 	code := `
 		package main
 
@@ -54,11 +54,11 @@ func createTestProgramm() (string, error) {
 		}
 	`
 
-	//Files
+	// Files
 	progSourceFile := os.TempDir() + "/hammy_spexecuter_test_subp.go"
 	progFile := os.TempDir() + "/hammy_spexecuter_test_subp"
 
-	//Cretate source file
+	// Cretate source file
 	f, err := os.Create(progSourceFile)
 	if err != nil {
 		return "", err
@@ -78,7 +78,7 @@ func createTestProgramm() (string, error) {
 		return "", err
 	}
 
-	//Compile programm
+	// Compile programm
 	err = os.Chdir(os.TempDir())
 	if err != nil {
 		return "", err

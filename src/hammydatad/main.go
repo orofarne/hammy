@@ -15,7 +15,7 @@ import (
 
 import "hammy"
 
-//Debug and statistics
+// Debug and statistics
 import (
 	_ "net/http/pprof"
 	_ "expvar"
@@ -26,7 +26,7 @@ type Answer struct {
 	Y []float64
 }
 
-//Returns data for tests
+// Returns data for tests
 type TestDataReader struct {
 }
 
@@ -52,13 +52,13 @@ func (tr *TestDataReader) Read(objKey string, itemKey string, from uint64, to ui
 	return
 }
 
-//Http server object
+// Http server object
 type HttpServer struct{
-	//Data reader
+	// Data reader
 	DReader hammy.DataReader
 }
 
-//Request handler
+// Request handler
 func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -157,7 +157,7 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//Parse comand-line and fill config
+// Parse comand-line and fill config
 func loadConfig(cfg *hammy.Config) {
 	var configFile string
 
@@ -213,7 +213,7 @@ func main() {
 		DReader: dr,
 	}
 
-	//Setup server
+	// Setup server
 	s := &http.Server{
 		Addr:				cfg.DataHttp.Addr,
 		Handler:			h,

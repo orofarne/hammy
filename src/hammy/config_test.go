@@ -9,7 +9,7 @@ func TestSetConfigDefaults(t *testing.T) {
 		t.Errorf("Error should not be nil")
 	}
 
-	//Mandatory fields:
+	// Mandatory fields:
 	cfg.Workers.CmdLine = "/bin/ls"
 	cfg.CouchbaseTriggers.ConnectTo = "http://localhost:8091/"
 	cfg.CouchbaseTriggers.Bucket = "default"
@@ -20,7 +20,7 @@ func TestSetConfigDefaults(t *testing.T) {
 	cfg.CouchbaseDataReader.ConnectTo = "http://localhost:8091/"
 	cfg.CouchbaseDataReader.Bucket = "default"
 
-	//Retry...
+	// Retry...
 	err = SetConfigDefaults(&cfg)
 	if err != nil {
 		t.Fatalf("Error: %v", err)

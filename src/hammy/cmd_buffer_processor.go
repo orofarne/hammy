@@ -7,9 +7,9 @@ import (
 )
 
 type CmdBufferProcessorImpl struct {
-	//Send buffer
+	// Send buffer
 	SBuffer SendBuffer
-	//Data saver
+	// Data saver
 	Saver SendBuffer
 }
 
