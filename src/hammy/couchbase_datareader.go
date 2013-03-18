@@ -81,9 +81,14 @@ func (cr *CouchbaseDataReader) Read(objKey string, itemKey string, from uint64, 
 			case gomemcached.KEY_ENOENT:
 				// nil
 			default:
-				err = fmt.Errorf("%s", r.Error())
+				err = fmt.Errorf("GetBult error: %s", r.Error())
 				return
 		}
+	}
+
+	if dataLen == 0 {
+		data = make([]IncomingValueData, 0)
+		return
 	}
 
 	dataRaw := make([]byte, dataLen)
@@ -102,6 +107,7 @@ func (cr *CouchbaseDataReader) Read(objKey string, itemKey string, from uint64, 
 
 	err = msgpack.Unmarshal(dataRaw, &data, nil)
 	if err != nil {
+		err = fmt.Errorf("Unmarshal error: %v (data: %#v)", err, dataRaw)
 		return
 	}
 

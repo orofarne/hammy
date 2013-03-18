@@ -23,7 +23,7 @@ import (
 
 type Answer struct {
 	X []uint64
-	Y []float64
+	Y []interface{}
 }
 
 // Returns data for tests
@@ -38,7 +38,7 @@ func (tr *TestDataReader) Read(objKey string, itemKey string, from uint64, to ui
 	switch itemKey {
 		case "sin":
 			n := to - from + 1
-			data := make([]hammy.IncomingValueData, n)
+			data = make([]hammy.IncomingValueData, n)
 			var i uint64
 			for i = 0; i < n; i++ {
 				data[i].Timestamp = from + i
@@ -131,7 +131,7 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ans := new(Answer)
 	n := len(data)
 	ans.X = make([]uint64, n)
-	ans.Y = make([]float64, n)
+	ans.Y = make([]interface{}, n)
 	for i := 0; i < n; i++ {
 		ans.X[i] = data[i].Timestamp
 		var converted bool
