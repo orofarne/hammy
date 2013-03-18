@@ -3,6 +3,7 @@ package hammy
 import (
 	"fmt"
 	"sort"
+	"bytes"
 	"github.com/couchbaselabs/go-couchbase"
 	"github.com/ugorji/go-msgpack"
 	"github.com/dustin/gomemcached"
@@ -105,10 +106,24 @@ func (cr *CouchbaseDataReader) Read(objKey string, itemKey string, from uint64, 
 		}
 	}
 
-	err = msgpack.Unmarshal(dataRaw, &data, nil)
-	if err != nil {
-		err = fmt.Errorf("Unmarshal error: %v (data: %#v)", err, dataRaw)
-		return
+	data = make([]IncomingValueData, 0)
+	dataRawBuffer := bytes.NewBuffer(dataRaw)
+	dec := msgpack.NewDecoder(dataRawBuffer, nil)
+	for {
+		var val IncomingValueData
+		err = dec.Decode(&val)
+		if err != nil {
+			if err.Error() == "EOF" {
+				err = nil
+				break
+			} else {
+				//err = fmt.Errorf("Unmarshal error: %#v (data: %#v)", err, dataRaw)
+				err = fmt.Errorf("Unmarshal error: %v", err)
+				return
+			}
+		}
+
+		data = append(data, val)
 	}
 
 	ds := dataTimeSorter{

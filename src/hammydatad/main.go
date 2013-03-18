@@ -134,15 +134,7 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ans.Y = make([]interface{}, n)
 	for i := 0; i < n; i++ {
 		ans.X[i] = data[i].Timestamp
-		var converted bool
-		ans.Y[i], converted = data[i].Value.(float64)
-		if !converted {
-			err := fmt.Errorf("Failed to convert `%#v` to float64", data[i].Value)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			fmt.Fprintf(w, "%v\n", err)
-			log.Printf("Internal Server Error: %v", err)
-			return
-		}
+		ans.Y[i] = data[i].Value
 	}
 
 	w.Header().Set("Content-Type", "application/json")
