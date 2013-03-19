@@ -25,7 +25,7 @@ func TestCmdBufferSendCommand(t *testing.T) {
 
 	cmdb := make(CmdBuffer, 1)
 	cmdb[0].Cmd = "send"
-	cmdb[0].Options = make(map[string]string)
+	cmdb[0].Options = make(map[string]interface{})
 	cmdb[0].Options["key"] = "key1"
 	cmdb[0].Options["value"] = "hello"
 	err := cbp.Process("obj1", &cmdb)

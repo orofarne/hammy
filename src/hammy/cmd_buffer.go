@@ -3,7 +3,7 @@ package hammy
 // Command
 type Cmd struct {
 	Cmd string
-	Options map[string]string
+	Options map[string]interface{}
 }
 
 // Commads queue from trigger

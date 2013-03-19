@@ -33,19 +33,27 @@ func (cbp *CmdBufferProcessorImpl) Process(key string, cmdb *CmdBuffer) error {
 func (cbp *CmdBufferProcessorImpl) log(key string, message string) error {
 	cmdb := make(CmdBuffer, 1)
 	cmdb[0].Cmd = "log"
-	cmdb[0].Options = make(map[string]string)
+	cmdb[0].Options = make(map[string]interface{})
 	cmdb[0].Options["message"] = message
 	return cbp.Process(key, &cmdb)
 }
 
-func (cbp *CmdBufferProcessorImpl) processSend(key string, opts map[string]string) {
-	objName := opts["object"]
-	if objName == "" {
+func (cbp *CmdBufferProcessorImpl) processSend(key string, opts map[string]interface{}) {
+	objNameRaw := opts["object"]
+	var objName string
+	if objNameRaw == nil {
 		objName = key
+	} else {
+		var converted bool
+		objName, converted = objNameRaw.(string)
+		if !converted {
+			cbp.log(key, fmt.Sprintf("Invalid send: invalid object name (command options: %v)", opts))
+			return
+		}
 	}
 
-	itemKey := opts["key"]
-	if itemKey == "" {
+	itemKey, itemKeyConverted := opts["key"].(string)
+	if !itemKeyConverted  || itemKey == "" {
 		cbp.log(key, fmt.Sprintf("Invalid send: key expected (command options: %v)", opts))
 		return
 	}
@@ -68,9 +76,9 @@ func (cbp *CmdBufferProcessorImpl) processSend(key string, opts map[string]strin
 	cbp.SBuffer.Push(&data)
 }
 
-func (cbp *CmdBufferProcessorImpl) processSave(key string, opts map[string]string) {
-	itemKey := opts["key"]
-	if itemKey == "" {
+func (cbp *CmdBufferProcessorImpl) processSave(key string, opts map[string]interface{}) {
+	itemKey, itemKeyConverted := opts["key"].(string)
+	if !itemKeyConverted || itemKey == "" {
 		cbp.log(key, fmt.Sprintf("Invalid save: key expected (command options: %v)", opts))
 		return
 	}
@@ -81,16 +89,51 @@ func (cbp *CmdBufferProcessorImpl) processSave(key string, opts map[string]strin
 		return
 	}
 
+	switch value.(type) {
+		case int:
+			value = float64(value.(int))
+		case int8:
+			value = float64(value.(int8))
+		case int16:
+			value = float64(value.(int16))
+		case int32:
+			value = float64(value.(int32))
+		case int64:
+			value = float64(value.(int64))
+		case uint:
+			value = float64(value.(uint))
+		case uint8:
+			value = float64(value.(uint8))
+		case uint16:
+			value = float64(value.(uint16))
+		case uint32:
+			value = float64(value.(uint32))
+		case uint64:
+			value = float64(value.(uint64))
+		case float32:
+			value = float64(value.(float32))
+		case float64:
+			// Do nothing
+		case string:
+			// Do nothing
+		default:
+			value = fmt.Sprint(value)
+	}
+
 	var ts uint64
-	ts_s := opts["timestamp"]
-	if ts_s == "" {
-		ts = uint64(time.Now().Unix())
-	} else {
-		_, err := fmt.Sscan(ts_s, &ts)
-		if err != nil {
+	tsRaw := opts["timestamp"]
+	switch tsRaw.(type) {
+		case nil:
+			ts = uint64(time.Now().Unix())
+		case string:
+			_, err := fmt.Sscan(tsRaw.(string), &ts)
+			if err != nil {
+				cbp.log(key, fmt.Sprintf("Invalid save: invalid timestamp (command options: %v)", opts))
+				return
+			}
+		default:
 			cbp.log(key, fmt.Sprintf("Invalid save: invalid timestamp (command options: %v)", opts))
 			return
-		}
 	}
 
 	data := make(IncomingData)

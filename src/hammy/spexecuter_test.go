@@ -23,9 +23,9 @@ var testWorker1 = `
 	func main() {
 		for i := 0; i < 5; i++ {
 			var input hammy.WorkerProcessInput
-			cmd1opt := make(map[string]string)
-			cmd2opt := make(map[string]string)
-			cmd3opt := make(map[string]string)
+			cmd1opt := make(map[string]interface{})
+			cmd2opt := make(map[string]interface{})
+			cmd3opt := make(map[string]interface{})
 			cmd1opt["message"] = "Hello"
 			cmd2opt["message"] = "World"
 			cmd3opt["pid"] = fmt.Sprintf("%d", os.Getpid())
@@ -183,7 +183,7 @@ func TestSPExecuterKills(t *testing.T) {
 
 		newPid := (*cmdb)[2].Options["pid"]
 		if prevPid == "" {
-			prevPid = newPid
+			prevPid = newPid.(string)
 		} else {
 			if newPid != prevPid {
 				pidChanged = true
