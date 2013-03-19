@@ -169,9 +169,18 @@ func main() {
 		log.Println(http.ListenAndServe(cfg.Debug.HammyDataDAddr, nil))
 	}()
 
-	dr, err := hammy.NewCouchbaseDataReader(cfg)
-	if err != nil {
-		log.Fatalf("NewCouchbaseDataReader: %v", err)
+	var dr hammy.DataReader
+	if cfg.CouchbaseDataReader.Active {
+		dr, err = hammy.NewCouchbaseDataReader(cfg)
+		if err != nil {
+			log.Fatalf("NewCouchbaseDataReader: %v", err)
+		}
+	}
+	if cfg.MySQLDataReader.Active {
+		dr, err = hammy.NewMySQLDataReader(cfg)
+		if err != nil {
+			log.Fatalf("NewMySQLDataReader: %v", err)
+		}
 	}
 
 	h := &HttpServer{

@@ -108,10 +108,20 @@ func main() {
 	go sb.Listen()
 	cbp.SBuffer = sb
 
-	saver, err := hammy.NewCouchbaseSaver(cfg)
-	if err != nil {
-		log.Fatal("CouchbaseSaver: %v", err)
+	var saver hammy.SendBuffer
+	if cfg.CouchbaseSaver.Active {
+		saver, err = hammy.NewCouchbaseSaver(cfg)
+		if err != nil {
+			log.Fatal("CouchbaseSaver: %v", err)
+		}
 	}
+	if cfg.MySQLSaver.Active {
+		saver, err = hammy.NewMySQLSaver(cfg)
+		if err != nil {
+			log.Fatal("MySQLSaver: %v", err)
+		}
+	}
+
 	cbp.Saver = saver
 
 	log.Printf("done.")
