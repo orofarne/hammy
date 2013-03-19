@@ -126,6 +126,40 @@ type Config struct {
 		// Limit for parallel connections
 		MaxConn int
 	}
+	// MySQL historical data saver
+	MySQLSaver struct {
+		// Use this implementation
+		Active bool
+		// Database to connect
+		Database string
+		// DB user
+		User string
+		// DB user password
+		Password string
+		// table that contains numeric history
+		Table string
+		// table that contains text history
+		LogTable string
+		// Limit for parallel connections
+		MaxConn int
+	}
+	// MySQL historical data reader
+	MySQLDataReader struct {
+		// Use this implementation
+		Active bool
+		// Database to connect
+		Database string
+		// DB user
+		User string
+		// DB user password
+		Password string
+		// table that contains numeric history
+		Table string
+		// table that contains text history
+		LogTable string
+		// Limit for parallel connections
+		MaxConn int
+	}
 }
 
 // Setup defaults for empty values in configs
@@ -198,6 +232,24 @@ func SetConfigDefaults(cfg *Config) error {
 		if cfg.MySQLStates.MaxConn == 0 { cfg.MySQLStates.MaxConn = 10 }
 	}
 
+	// Section [MySQLSaver]
+	if cfg.MySQLSaver.Active {
+		if cfg.MySQLSaver.Database == "" { return fmt.Errorf("Empty cfg.MySQLSaver.Database") }
+		if cfg.MySQLSaver.User == "" { return fmt.Errorf("Empty cfg.MySQLSaver.User") }
+		if cfg.MySQLSaver.Table == "" { return fmt.Errorf("Empty cfg.MySQLSaver.Table") }
+		if cfg.MySQLSaver.LogTable == "" { return fmt.Errorf("Empty cfg.MySQLSaver.LogTable") }
+		if cfg.MySQLSaver.MaxConn == 0 { cfg.MySQLSaver.MaxConn = 10 }
+	}
+
+	// Section [MySQLDataReader]
+	if cfg.MySQLDataReader.Active {
+		if cfg.MySQLDataReader.Database == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.Database") }
+		if cfg.MySQLDataReader.User == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.User") }
+		if cfg.MySQLDataReader.Table == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.Table") }
+		if cfg.MySQLDataReader.LogTable == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.LogTable") }
+		if cfg.MySQLDataReader.MaxConn == 0 { cfg.MySQLDataReader.MaxConn = 10 }
+	}
+
 	// Counts
 	// 1) TriggersGetter
 	{
@@ -226,6 +278,7 @@ func SetConfigDefaults(cfg *Config) error {
 		k := 0
 
 		if cfg.CouchbaseSaver.Active { k++ }
+		if cfg.MySQLSaver.Active { k++ }
 
 		if k != 1 {
 			return fmt.Errorf("Invalid count of active DataSaver drivers: %d", k)
@@ -236,6 +289,7 @@ func SetConfigDefaults(cfg *Config) error {
 		k := 0
 
 		if cfg.CouchbaseDataReader.Active { k++ }
+		if cfg.MySQLDataReader.Active { k++ }
 
 		if k != 1 {
 			return fmt.Errorf("Invalid count of active DataReader drivers: %d", k)

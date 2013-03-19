@@ -39,7 +39,7 @@ func NewMySQLTriggersGetter(cfg Config) (tg *MySQLTriggersGetter, err error) {
 }
 
 func (tg *MySQLTriggersGetter) MGet(keys []string) (triggers map[string]string, err error) {
-	//Pool limits
+	// Pool limits
 	<- tg.pool
 	defer func() {
 		tg.pool <- 1

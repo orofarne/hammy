@@ -41,22 +41,6 @@ func NewCouchbaseDataReader(cfg Config) (*CouchbaseDataReader, error) {
 	return s, nil
 }
 
-type dataTimeSorter struct {
-	Data *[]IncomingValueData
-}
-
-func (ds *dataTimeSorter) Len() int {
-	return len(*ds.Data)
-}
-
-func (ds *dataTimeSorter) Less(i, j int) bool {
-	return (*ds.Data)[i].Timestamp < (*ds.Data)[j].Timestamp
-}
-
-func (ds *dataTimeSorter) Swap(i, j int) {
-	(*ds.Data)[i], (*ds.Data)[j] = (*ds.Data)[j], (*ds.Data)[i]
-}
-
 func (cr *CouchbaseDataReader) Read(objKey string, itemKey string, from uint64, to uint64) (data []IncomingValueData, err error) {
 	// Construct keys slice
 	bucketFrom, bucketTo := (from / CouchbaseDataBucketQuantum), (to / CouchbaseDataBucketQuantum)
@@ -121,10 +105,12 @@ func (cr *CouchbaseDataReader) Read(objKey string, itemKey string, from uint64, 
 		data = append(data, val)
 	}
 
-	ds := dataTimeSorter{
+	ds := DataTimeSorter{
 		Data: &data,
 	}
 	sort.Sort(&ds)
+
+	// TODO: remove "bad" values
 
 	return
 }

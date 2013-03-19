@@ -42,7 +42,7 @@ func NewMySQLStateKeeper(cfg Config) (sk *MySQLStateKeeper, err error) {
 }
 
 func (sk *MySQLStateKeeper) Get(key string) (ans StateKeeperAnswer) {
-	//Pool limits
+	// Pool limits
 	<- sk.pool
 	defer func() {
 		sk.pool <- 1
@@ -76,7 +76,7 @@ func (sk *MySQLStateKeeper) Get(key string) (ans StateKeeperAnswer) {
 }
 
 func (sk *MySQLStateKeeper) MGet(keys []string) (states map[string]StateKeeperAnswer) {
-	//Pool limits
+	// Pool limits
 	<- sk.pool
 	defer func() {
 		sk.pool <- 1
@@ -96,18 +96,18 @@ SUBKEYS:	for i := 0; i < n; i += 10 {
 
 		m := len(subkeys)
 
-		sql := fmt.Sprintf("SELECT `obj_key`, `obj_state`, `cas` FROM `%s` WHERE `obj_key` IN (?", sk.tableName)
+		sqlq := fmt.Sprintf("SELECT `obj_key`, `obj_state`, `cas` FROM `%s` WHERE `obj_key` IN (?", sk.tableName)
 		for j := 1; j < m; j++ {
-			sql += ", ?"
+			sqlq += ", ?"
 		}
-		sql += ")"
+		sqlq += ")"
 
 		args := make([]interface{}, m)
 		for k, s := range subkeys {
 			args[k] = s
 		}
 
-		rows, e := sk.db.Query(sql, args...)
+		rows, e := sk.db.Query(sqlq, args...)
 		if e != nil {
 			for _, k := range subkeys {
 				states[k] = StateKeeperAnswer{
@@ -168,7 +168,7 @@ SUBKEYS:	for i := 0; i < n; i += 10 {
 }
 
 func (sk *MySQLStateKeeper) Set(key string, data State, cas *uint64) (retry bool, err error) {
-	//Pool limits
+	// Pool limits
 	<- sk.pool
 	defer func() {
 		sk.pool <- 1
