@@ -109,6 +109,19 @@ type Config struct {
 		// table that contains triggers (obj_key, obj_trigger)
 		Table string
 	}
+	// MySQL for states
+	MySQLStates struct {
+		// Use this implementation
+		Active bool
+		// Database to connect
+		Database string
+		// DB user
+		User string
+		// DB user password
+		Password string
+		// table that contains states (obj_key, obj_state, cas)
+		Table string
+	}
 }
 
 // Setup defaults for empty values in configs
@@ -172,6 +185,13 @@ func SetConfigDefaults(cfg *Config) error {
 		if cfg.MySQLTriggers.Table == "" { return fmt.Errorf("Empty cfg.MySQLTriggers.Table") }
 	}
 
+	// Section [MySQLStates]
+	if cfg.MySQLStates.Active {
+		if cfg.MySQLStates.Database == "" { return fmt.Errorf("Empty cfg.MySQLStates.Database") }
+		if cfg.MySQLStates.User == "" { return fmt.Errorf("Empty cfg.MySQLStates.User") }
+		if cfg.MySQLStates.Table == "" { return fmt.Errorf("Empty cfg.MySQLStates.Table") }
+	}
+
 	// Counts
 	// 1) TriggersGetter
 	{
@@ -189,6 +209,7 @@ func SetConfigDefaults(cfg *Config) error {
 		k := 0
 
 		if cfg.CouchbaseStates.Active { k++ }
+		if cfg.MySQLStates.Active { k++ }
 
 		if k != 1 {
 			return fmt.Errorf("Invalid count of active StateKeeper drivers: %d", k)

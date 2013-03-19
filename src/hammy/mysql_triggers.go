@@ -9,11 +9,11 @@ import (
 // Driver for retriving triggers from MySQL database
 // It's assumes the table structure like this:
 //
-// CREATE TABLE `triggers` (
-//   `obj_key` varchar(255) NOT NULL,
-//   `obj_trigger` text,
-//   PRIMARY KEY (`obj_key`)
-// ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+//  CREATE TABLE `triggers` (
+//    `obj_key` varchar(255) NOT NULL,
+//    `obj_trigger` text,
+//    PRIMARY KEY (`obj_key`)
+//  ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 //
 type MySQLTriggersGetter struct {
 	db *sql.DB
