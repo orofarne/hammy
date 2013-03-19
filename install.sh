@@ -4,13 +4,12 @@ PREFIX="/opt/hammy"
 
 set -ex
 
-SRCROOT=`dirname "$(pwd)/$0"`
+cd `dirname "$(pwd)/$0"`
 
 mkdir -p "$PREFIX"
-cp -R "$SRCROOT/src" "$SRCROOT/ruby" "$PREFIX"
 
-export GOPATH="$PREFIX"
-cd "$PREFIX"
-go run "$SRCROOT/bootstrap.go"
-go test hammy && go install hammy hammyd hammycid hammydatad
-cd -
+cp bin/hammy "$PREFIX"
+cp bin/hammyd "$PREFIX"
+cp bin/hammycid "$PREFIX"
+cp bin/hammydatad "$PREFIX"
+cp -R worker "$PREFIX"
