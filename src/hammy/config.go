@@ -96,6 +96,19 @@ type Config struct {
 		// e.g. "default"
 		Bucket string
 	}
+	// MySQL for triggers configuration
+	MySQLTriggers struct {
+		// Use this implementation
+		Active bool
+		// Database to connect
+		Database string
+		// DB user
+		User string
+		// DB user password
+		Password string
+		// table that contains triggers (obj_key, obj_trigger)
+		Table string
+	}
 }
 
 // Setup defaults for empty values in configs
@@ -152,12 +165,20 @@ func SetConfigDefaults(cfg *Config) error {
 		if cfg.CouchbaseDataReader.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseDataReader.Bucket") }
 	}
 
+	// Section [MySQLTriggers]
+	if cfg.MySQLTriggers.Active {
+		if cfg.MySQLTriggers.Database == "" { return fmt.Errorf("Empty cfg.MySQLTriggers.Database") }
+		if cfg.MySQLTriggers.User == "" { return fmt.Errorf("Empty cfg.MySQLTriggers.User") }
+		if cfg.MySQLTriggers.Table == "" { return fmt.Errorf("Empty cfg.MySQLTriggers.Table") }
+	}
+
 	// Counts
 	// 1) TriggersGetter
 	{
 		k := 0
 
 		if cfg.CouchbaseTriggers.Active { k++ }
+		if cfg.MySQLTriggers.Active { k++ }
 
 		if k != 1 {
 			return fmt.Errorf("Invalid count of active TriggersGetter drivers: %d", k)

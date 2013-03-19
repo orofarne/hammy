@@ -49,4 +49,12 @@ func TestSetConfigDefaults(t *testing.T) {
 	if cfg.SendBuffer.SleepTime != 10.0 {
 		t.Errorf("cfg.SendBuffer.SleepTime = %#v, expected %#v", cfg.SendBuffer.SleepTime, 10.0)
 	}
+
+	cfg.MySQLTriggers.Active = true
+
+	// Retry...
+	err = SetConfigDefaults(&cfg)
+	if err == nil {
+		t.Errorf("Error should not be nil")
+	}
 }

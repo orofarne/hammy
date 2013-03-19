@@ -51,6 +51,9 @@ func main() {
 	goGet("code.google.com/p/gcfg")
 	goGet("github.com/dustin/gomemcached")
 	goGet("github.com/couchbaselabs/go-couchbase")
+	goGet("github.com/ziutek/mymysql/thrsafe")
+	goGet("github.com/ziutek/mymysql/autorc")
+	goGet("github.com/ziutek/mymysql/godrv")
 
 	log.Printf(";-)")
 	log.Printf("Now you can run `go test hammy && go install hammy hammyd hammycid hammydatad`")
