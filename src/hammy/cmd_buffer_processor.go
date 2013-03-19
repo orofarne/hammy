@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"strings"
 )
 
 type CmdBufferProcessorImpl struct {
@@ -118,6 +119,17 @@ func (cbp *CmdBufferProcessorImpl) processSave(key string, opts map[string]inter
 			// Do nothing
 		default:
 			value = fmt.Sprint(value)
+	}
+
+	if strings.HasSuffix(itemKey, "#log") {
+		if _, converted := value.(string); !converted {
+			value = fmt.Sprint(value)
+		}
+	} else {
+		if _, converted := value.(float64); !converted {
+			cbp.log(key, fmt.Sprintf("Invalid save: invalid value for non log key `%s` (command options: %v)", itemKey, opts))
+			return
+		}
 	}
 
 	var ts uint64
