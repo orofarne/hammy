@@ -21,17 +21,33 @@ import (
 type MySQLStateKeeper struct {
 	db *sql.DB
 	tableName string
+	pool chan int
 }
 
 func NewMySQLStateKeeper(cfg Config) (sk *MySQLStateKeeper, err error) {
 	sk = new(MySQLStateKeeper)
 	sk.db, err = sql.Open("mymysql", cfg.MySQLStates.Database + "/" + cfg.MySQLStates.User + "/" + cfg.MySQLStates.Password)
+	if err != nil {
+		return
+	}
+
 	sk.tableName = cfg.MySQLStates.Table
+
+	sk.pool = make(chan int, cfg.MySQLStates.MaxConn)
+	for i := 0; i < cfg.MySQLStates.MaxConn; i++ {
+		sk.pool <- 1
+	}
 
 	return
 }
 
 func (sk *MySQLStateKeeper) Get(key string) (ans StateKeeperAnswer) {
+	//Pool limits
+	<- sk.pool
+	defer func() {
+		sk.pool <- 1
+	}()
+
 	var stateRaw []byte
 	var cas uint64
 
@@ -60,6 +76,12 @@ func (sk *MySQLStateKeeper) Get(key string) (ans StateKeeperAnswer) {
 }
 
 func (sk *MySQLStateKeeper) MGet(keys []string) (states map[string]StateKeeperAnswer) {
+	//Pool limits
+	<- sk.pool
+	defer func() {
+		sk.pool <- 1
+	}()
+
 	states = make(map[string]StateKeeperAnswer)
 
 	n := len(keys)
@@ -146,6 +168,12 @@ SUBKEYS:	for i := 0; i < n; i += 10 {
 }
 
 func (sk *MySQLStateKeeper) Set(key string, data State, cas *uint64) (retry bool, err error) {
+	//Pool limits
+	<- sk.pool
+	defer func() {
+		sk.pool <- 1
+	}()
+
 	stateRaw, err := json.Marshal(data)
 	if err != nil {
 		return

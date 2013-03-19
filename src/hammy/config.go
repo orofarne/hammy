@@ -108,6 +108,8 @@ type Config struct {
 		Password string
 		// table that contains triggers (obj_key, obj_trigger)
 		Table string
+		// Limit for parallel connections
+		MaxConn int
 	}
 	// MySQL for states
 	MySQLStates struct {
@@ -121,6 +123,8 @@ type Config struct {
 		Password string
 		// table that contains states (obj_key, obj_state, cas)
 		Table string
+		// Limit for parallel connections
+		MaxConn int
 	}
 }
 
@@ -183,6 +187,7 @@ func SetConfigDefaults(cfg *Config) error {
 		if cfg.MySQLTriggers.Database == "" { return fmt.Errorf("Empty cfg.MySQLTriggers.Database") }
 		if cfg.MySQLTriggers.User == "" { return fmt.Errorf("Empty cfg.MySQLTriggers.User") }
 		if cfg.MySQLTriggers.Table == "" { return fmt.Errorf("Empty cfg.MySQLTriggers.Table") }
+		if cfg.MySQLTriggers.MaxConn == 0 { cfg.MySQLTriggers.MaxConn = 10 }
 	}
 
 	// Section [MySQLStates]
@@ -190,6 +195,7 @@ func SetConfigDefaults(cfg *Config) error {
 		if cfg.MySQLStates.Database == "" { return fmt.Errorf("Empty cfg.MySQLStates.Database") }
 		if cfg.MySQLStates.User == "" { return fmt.Errorf("Empty cfg.MySQLStates.User") }
 		if cfg.MySQLStates.Table == "" { return fmt.Errorf("Empty cfg.MySQLStates.Table") }
+		if cfg.MySQLStates.MaxConn == 0 { cfg.MySQLStates.MaxConn = 10 }
 	}
 
 	// Counts

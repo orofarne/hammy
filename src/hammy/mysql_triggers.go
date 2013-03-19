@@ -18,17 +18,33 @@ import (
 type MySQLTriggersGetter struct {
 	db *sql.DB
 	tableName string
+	pool chan int
 }
 
 func NewMySQLTriggersGetter(cfg Config) (tg *MySQLTriggersGetter, err error) {
 	tg = new(MySQLTriggersGetter)
 	tg.db, err = sql.Open("mymysql", cfg.MySQLTriggers.Database + "/" + cfg.MySQLTriggers.User + "/" + cfg.MySQLTriggers.Password)
+	if err != nil {
+		return
+	}
+
 	tg.tableName = cfg.MySQLTriggers.Table
+
+	tg.pool = make(chan int, cfg.MySQLTriggers.MaxConn)
+	for i := 0; i < cfg.MySQLTriggers.MaxConn; i++ {
+		tg.pool <- 1
+	}
 
 	return
 }
 
 func (tg *MySQLTriggersGetter) MGet(keys []string) (triggers map[string]string, err error) {
+	//Pool limits
+	<- tg.pool
+	defer func() {
+		tg.pool <- 1
+	}()
+
 	triggers = make(map[string]string)
 
 	n := len(keys)
