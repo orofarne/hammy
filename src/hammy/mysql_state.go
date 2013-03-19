@@ -2,6 +2,7 @@ package hammy
 
 import (
 	"fmt"
+	"strings"
 	"encoding/json"
 	"database/sql"
 	_ "github.com/ziutek/mymysql/godrv"
@@ -154,10 +155,13 @@ func (sk *MySQLStateKeeper) Set(key string, data State, cas *uint64) (retry bool
 		sqlq := fmt.Sprintf("INSERT INTO `%s` SET `obj_key` = ?, `obj_state` = ?, `cas` = ?", sk.tableName)
 		_, e := sk.db.Exec(sqlq, key, stateRaw, 0)
 		if e != nil {
-			//TODO
 			// Error may looks like this:
 			//  Received #1062 error from MySQL server: "Duplicate entry 'foo.example.com' for key 'PRIMARY'"
-			err = e
+			if strings.Contains(e.Error(), "Received #1062 error from MySQL server") {
+				retry = true
+			} else {
+				err = e
+			}
 			return
 		}
 	} else {
