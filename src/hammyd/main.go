@@ -65,9 +65,18 @@ func main() {
 		log.Println(http.ListenAndServe(cfg.Debug.HammyDAddr, nil))
 	}()
 
-	tg, err := hammy.NewCouchbaseTriggersGetter(cfg)
-	if err != nil {
-		log.Fatalf("CouchbaseTriggersGetter: %v", err)
+	var tg hammy.TriggersGetter
+	if cfg.CouchbaseTriggers.Active {
+		tg, err = hammy.NewCouchbaseTriggersGetter(cfg)
+		if err != nil {
+			log.Fatalf("CouchbaseTriggersGetter: %v", err)
+		}
+	}
+	if cfg.MySQLTriggers.Active {
+		tg, err = hammy.NewMySQLTriggersGetter(cfg)
+		if err != nil {
+			log.Fatal("MySQLTriggersGetter: %v", err)
+		}
 	}
 
 	sk, err := hammy.NewCouchbaseStateKeeper(cfg)
