@@ -155,6 +155,8 @@ func (sk *MySQLStateKeeper) Set(key string, data State, cas *uint64) (retry bool
 		_, e := sk.db.Exec(sqlq, key, stateRaw, 0)
 		if e != nil {
 			//TODO
+			// Error may looks like this:
+			//  Received #1062 error from MySQL server: "Duplicate entry 'foo.example.com' for key 'PRIMARY'"
 			err = e
 			return
 		}

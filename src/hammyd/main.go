@@ -79,9 +79,18 @@ func main() {
 		}
 	}
 
-	sk, err := hammy.NewCouchbaseStateKeeper(cfg)
-	if err != nil {
-		log.Fatalf("CouchbaseStateKeeper: %v", err)
+	var sk hammy.StateKeeper
+	if cfg.CouchbaseStates.Active {
+		sk, err = hammy.NewCouchbaseStateKeeper(cfg)
+		if err != nil {
+			log.Fatalf("CouchbaseStateKeeper: %v", err)
+		}
+	}
+	if cfg.MySQLStates.Active {
+		sk, err = hammy.NewMySQLStateKeeper(cfg)
+		if err != nil {
+			log.Fatalf("MySQLStateKeeper: %v", err)
+		}
 	}
 
 	e := hammy.NewSPExecuter(cfg)
