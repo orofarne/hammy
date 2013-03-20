@@ -2,7 +2,7 @@
 Addr = "localhost:4000"
 
 [DataHttp]
-Addr = "localhost:4000"
+Addr = "localhost:4001"
 
 [Workers]
 PoolSize = 5
