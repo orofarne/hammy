@@ -1,10 +1,14 @@
 BUILD
 =====
-    . ./env.sh
-    go run bootstrap.go
-    go test hammy && go install hammy hammyd hammycid hammydatad
+
+    ./build.sh
 
 INSTALL
 =======
 
-    ./install.sh
+    sudo ./install.sh
+
+CLEAN
+=====
+
+    ./clean.sh
