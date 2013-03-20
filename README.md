@@ -8,6 +8,11 @@ INSTALL
 
     sudo ./install.sh
 
+CLEAN
+=====
+
+    ./clean.sh
+
 
 EXAMPLE CONFIGURATION
 =====================
@@ -18,7 +23,3 @@ EXAMPLE CONFIGURATION
     ./bin/hammydatad -config=examples/config.gcfg &
     ./bin/hammycid -config=examples/config.gcfg &
 
-CLEAN
-=====
-
-    ./clean.sh

@@ -6,10 +6,9 @@ set -ex
 
 cd `dirname "$(pwd)/$0"`
 
-mkdir -p "$PREFIX"
+test -d "$PREFIX/bin" || mkdir -p "$PREFIX/bin"
 
-cp bin/hammy "$PREFIX"
-cp bin/hammyd "$PREFIX"
-cp bin/hammycid "$PREFIX"
-cp bin/hammydatad "$PREFIX"
+cp bin/hammyd "$PREFIX/bin"
+cp bin/hammycid "$PREFIX/bin"
+cp bin/hammydatad "$PREFIX/bin"
 cp -R worker "$PREFIX"

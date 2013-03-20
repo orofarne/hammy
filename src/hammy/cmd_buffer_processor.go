@@ -127,8 +127,17 @@ func (cbp *CmdBufferProcessorImpl) processSave(key string, opts map[string]inter
 		}
 	} else {
 		if _, converted := value.(float64); !converted {
-			cbp.log(key, fmt.Sprintf("Invalid save: invalid value for non log key `%s` (command options: %v)", itemKey, opts))
-			return
+			var val float64
+			str, strConverted := value.(string)
+			if !strConverted {
+				cbp.log(key, fmt.Sprintf("Invalid save: invalid value for non log key `%s` (command options: %v)", itemKey, opts))
+				return
+			}
+			if n, _ := fmt.Sscan(str, &val); n != 1 {
+				cbp.log(key, fmt.Sprintf("Invalid save: invalid value for non log key `%s` (command options: %v)", itemKey, opts))
+				return
+			}
+			value = val
 		}
 	}
 
