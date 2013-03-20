@@ -1,0 +1,36 @@
+[IncomingHttp]
+Addr = "localhost:4000"
+
+[DataHttp]
+Addr = "localhost:4000"
+
+[Workers]
+PoolSize = 5
+MaxIter = 100
+CmdLine = "worker/worker.rb"
+
+[MySQLTriggers]
+Active = true
+Database = "hammy"
+User = "root"
+Table = "triggers"
+
+[MySQLStates]
+Active = true
+Database = "hammy"
+User = "root"
+Table = "states"
+
+[MySQLSaver]
+Active = true
+Database = "hammy"
+User = "root"
+Table = "history"
+LogTable = "history_log"
+
+[MySQLDataReader]
+Active = true
+Database = "hammy"
+User = "root"
+Table = "history"
+LogTable = "history_log"

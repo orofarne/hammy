@@ -1,10 +1,24 @@
 BUILD
 =====
-    . ./env.sh
-    go run bootstrap.go
-    go test hammy && go install hammy hammyd hammycid hammydatad
+
+    ./build.sh
 
 INSTALL
 =======
 
-    ./install.sh
+    sudo ./install.sh
+
+
+EXAMPLE CONFIGURATION
+=====================
+
+    ./build.sh
+    ./examples/db_schema.rb | mysql -u root
+    ./bin/hammyd -config=examples/config.gcfg &
+    ./bin/hammydatad -config=examples/config.gcfg &
+    ./bin/hammycid -config=examples/config.gcfg &
+
+CLEAN
+=====
+
+    ./clean.sh
