@@ -7,8 +7,8 @@ import (
 	"flag"
 	"time"
 	"runtime"
+	"strings"
 	"net/http"
-	"encoding/json"
 	"code.google.com/p/gcfg"
 )
 
@@ -20,106 +20,42 @@ import (
 	_ "expvar"
 )
 
-type Answer struct {
-	X []uint64
-	Y []interface{}
-}
-
 // Http server object
 type HttpServer struct{
+	// Prefix
+	Prefix string
 	// Data reader
 	DReader hammy.DataReader
+	// State keeper
+	SKeeper hammy.StateKeeper
 }
 
-// Request handler
+// Request router
 func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if !strings.HasPrefix(r.URL.Path, h.Prefix) {
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+
+	path := r.URL.Path[len(h.Prefix):]
+
 	if r.Method != "GET" {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	q := r.URL.Query()
-
-	key_a := q["key"]
-	if len(key_a) == 0 {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
+	switch path {
+		case "/values":
+			h.ServeValues(w, r) // defined in values.go
+			return
+		case "/state":
+			h.ServeState(w, r) // defined in state.go
+			return
+		default:
+			http.Error(w, "Not Found", http.StatusNotFound)
+			return
 	}
-	key := key_a[0]
-	if key == "" {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-
-	obj_a := q["object"]
-	if len(obj_a) == 0 {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-	obj := obj_a[0]
-	if obj == "" {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-
-	var from, to uint64
-	from_a := q["from"]
-	if len(from_a) == 0 {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-	if _, err := fmt.Sscan(from_a[0], &from); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-	to_a := q["to"]
-	if len(to_a) == 0 {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-	if _, err := fmt.Sscan(to_a[0], &to); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-	if from >= to {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-
-	var dataReader hammy.DataReader
-	if obj == "__test" {
-		dataReader = &TestDataReader{}
-	} else {
-		dataReader = h.DReader
-	}
-
-	data, err := dataReader.Read(obj, key, from, to)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		fmt.Fprintf(w, "%v\n", err)
-		log.Printf("Internal Server Error: %v", err)
-		return
-	}
-
-	ans := new(Answer)
-	n := len(data)
-	ans.X = make([]uint64, n)
-	ans.Y = make([]interface{}, n)
-	for i := 0; i < n; i++ {
-		ans.X[i] = data[i].Timestamp
-		ans.Y[i] = data[i].Value
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	enc := json.NewEncoder(w)
-	err = enc.Encode(ans)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		fmt.Fprintf(w, "%v\n", err)
-		log.Printf("Internal Server Error: %v", err)
-		return
-	}
+	panic("?!")
 }
 
 // Parse comand-line and fill config
@@ -183,9 +119,28 @@ func main() {
 		}
 	}
 
-	h := &HttpServer{
-		DReader: dr,
+	var sk hammy.StateKeeper
+	if cfg.CouchbaseStates.Active {
+		sk, err = hammy.NewCouchbaseStateKeeper(cfg)
+		if err != nil {
+			log.Fatalf("CouchbaseStateKeeper: %v", err)
+		}
 	}
+	if cfg.MySQLStates.Active {
+		sk, err = hammy.NewMySQLStateKeeper(cfg)
+		if err != nil {
+			log.Fatalf("MySQLStateKeeper: %v", err)
+		}
+	}
+
+	h := &HttpServer{
+		Prefix: cfg.DataHttp.Prefix,
+		DReader: dr,
+		SKeeper: sk,
+	}
+
+	log.Printf("done.")
+	log.Printf("Starting HTTP interface...")
 
 	// Setup server
 	s := &http.Server{

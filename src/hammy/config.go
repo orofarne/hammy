@@ -15,6 +15,9 @@ type Config struct {
 		// Addr for data request
 		// e.g. "0.0.0.0:4000" or ":4000" for ipv6
 		Addr string
+		// Http prefix
+		// e.g. /data (default)
+		Prefix string
 	}
 	// Logging options
 	Log struct {
@@ -170,6 +173,7 @@ func SetConfigDefaults(cfg *Config) error {
 
 	// Section [DataHttp]
 	if cfg.DataHttp.Addr == "" { cfg.DataHttp.Addr = ":4001" }
+	if cfg.DataHttp.Prefix == "" { cfg.DataHttp.Prefix = "/data" }
 
 	// Section [Log]
 
