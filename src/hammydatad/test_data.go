@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"time"
 )
 
 import "hammy"
@@ -60,5 +61,24 @@ func (tr *TestDataReader) Read(objKey string, itemKey string, from uint64, to ui
 			return
 	}
 
+	return
+}
+
+func GenTestState()(ans hammy.StateKeeperAnswer) {
+	now := uint64(time.Now().Unix())
+
+	ans.State = make(hammy.State)
+	ans.State["sin"] = hammy.StateElem{
+		LastUpdate: now,
+		Value: 1.0,
+	}
+	ans.State["dmagefunc"] = hammy.StateElem{
+		LastUpdate: now,
+		Value: 1.0,
+	}
+	ans.State["Hello"] = hammy.StateElem{
+		LastUpdate: now,
+		Value: "world!",
+	}
 	return
 }

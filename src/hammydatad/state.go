@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 )
 
+import "hammy"
+
 func (h *HttpServer) ServeState(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
@@ -21,12 +23,18 @@ func (h *HttpServer) ServeState(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ans := h.SKeeper.Get(obj)
-	if ans.Err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		fmt.Fprintf(w, "%v\n", ans.Err)
-		log.Printf("Internal Server Error: %v", ans.Err)
-		return
+	var ans hammy.StateKeeperAnswer
+
+	if obj == "__test" {
+		ans = GenTestState()
+	} else {
+		ans = h.SKeeper.Get(obj)
+		if ans.Err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			fmt.Fprintf(w, "%v\n", ans.Err)
+			log.Printf("Internal Server Error: %v", ans.Err)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

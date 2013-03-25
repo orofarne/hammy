@@ -50,16 +50,15 @@ type RequestHandler interface {
 //      "Value": "booo!",
 //      "LastUpdate": 1361785778
 //    }
-type State map[string]struct {
+type State map[string]StateElem
+
+// Type for State element
+type StateElem struct {
 	LastUpdate uint64
 	Value interface{}
 }
 
 func NewState() *State {
-	var s State
-	s = make(map[string]struct {
-		LastUpdate uint64
-		Value interface{}
-	})
+	s := make(State)
 	return &s
 }
