@@ -32,15 +32,14 @@ class EvalEnv
 	end
 
 	def cmd(cmd, options = {})
-		opts = {}
-
-		options.each { |k, v|
-			opts[k] = v.to_s
-		}
+		# Default options
+		options[:key] = @key
+		options[:timestamp] = @timestamp
+		options[:value] = @value
 
 		@cmdbuf << {
 			'Cmd' => cmd,
-			'Options' => opts
+			'Options' => options
 		}
 	end
 
@@ -52,8 +51,12 @@ class EvalEnv
 		@key
 	end
 
-	def data()
-		@data
+	def timestamp()
+		@timestamp
+	end
+
+	def value()
+		@value
 	end
 
 	def results()
@@ -65,12 +68,16 @@ class EvalEnv
 
 	def eval(code, key, data)
 		@key = key
-		@data = data.sort { |x, y| x['Timestamp'] <=> y['Timestamp'] }
-		begin
-			return binding().eval(code)
-		rescue Exception => e
-			cmd 'log', :message => "Error: #{e.message}"
-		end
+		data.sort! { |x, y| x['Timestamp'] <=> y['Timestamp'] }
+		data.each { |elem|
+			@timestamp = elem['Timestamp']
+			@value = elem['Value']
+			begin
+				return binding().eval(code)
+			rescue Exception => e
+				cmd 'log', :message => "Error: #{e.message}"
+			end
+		}
 	end
 end
 
