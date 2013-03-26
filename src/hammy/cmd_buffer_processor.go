@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 	"strings"
+	"reflect"
 )
 
 type CmdBufferProcessorImpl struct {
@@ -91,26 +92,10 @@ func (cbp *CmdBufferProcessorImpl) processSave(key string, opts map[string]inter
 	}
 
 	switch value.(type) {
-		case int:
-			value = float64(value.(int))
-		case int8:
-			value = float64(value.(int8))
-		case int16:
-			value = float64(value.(int16))
-		case int32:
-			value = float64(value.(int32))
-		case int64:
-			value = float64(value.(int64))
-		case uint:
-			value = float64(value.(uint))
-		case uint8:
-			value = float64(value.(uint8))
-		case uint16:
-			value = float64(value.(uint16))
-		case uint32:
-			value = float64(value.(uint32))
-		case uint64:
-			value = float64(value.(uint64))
+		case int, int8, int16, int32, int64:
+			value = float64(reflect.ValueOf(value).Int())
+		case uint, uint8, uint16, uint32, uint64:
+			value = float64(reflect.ValueOf(value).Uint())
 		case float32:
 			value = float64(value.(float32))
 		case float64:
@@ -146,6 +131,12 @@ func (cbp *CmdBufferProcessorImpl) processSave(key string, opts map[string]inter
 	switch tsRaw.(type) {
 		case nil:
 			ts = uint64(time.Now().Unix())
+		case uint, uint8, uint16, uint32, uint64:
+			ts = reflect.ValueOf(tsRaw).Uint()
+		case int, int8, int16, int32, int64:
+			ts = uint64(reflect.ValueOf(tsRaw).Int())
+		case float32, float64:
+			ts = uint64(reflect.ValueOf(tsRaw).Float())
 		case string:
 			_, err := fmt.Sscan(tsRaw.(string), &ts)
 			if err != nil {
@@ -153,7 +144,7 @@ func (cbp *CmdBufferProcessorImpl) processSave(key string, opts map[string]inter
 				return
 			}
 		default:
-			cbp.log(key, fmt.Sprintf("Invalid save: invalid timestamp (command options: %v)", opts))
+			cbp.log(key, fmt.Sprintf("Invalid save: invalid timestamp of type %T (command options: %v)", tsRaw, opts))
 			return
 	}
 
