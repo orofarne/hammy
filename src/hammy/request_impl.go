@@ -28,7 +28,7 @@ type RequestHandlerImpl struct {
 }
 
 // Internal struct for processing result
-type objectProcessResult struct {
+type hostProcessResult struct {
 	Key string
 	Err error
 }
@@ -81,7 +81,7 @@ func (rh *RequestHandlerImpl) Handle(data IncomingData) (errs map[string]error) 
 	}
 
 	// Step 3: Start trigger processing
-	c := make(chan objectProcessResult) // result chanel
+	c := make(chan hostProcessResult) // result chanel
 	runningTasks := 0
 	for key, tr := range triggers {
 		state := states[key]
@@ -115,10 +115,10 @@ func (rh *RequestHandlerImpl) processTrigger(
 		trigger string,
 		state State,
 		cas *uint64,
-		data IncomingObjectData,
-		c chan objectProcessResult) {
+		data IncomingHostData,
+		c chan hostProcessResult) {
 //
-	ret := objectProcessResult{Key: key, Err: nil}
+	ret := hostProcessResult{Key: key, Err: nil}
 	defer func() {
 		c <- ret
 	}()

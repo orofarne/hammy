@@ -72,7 +72,7 @@ type ExecuterTestImpl struct {
 }
 
 func (e *ExecuterTestImpl) ProcessTrigger(key string, trigger string,
-	state *State, data IncomingObjectData) (newState *State, cmdb *CmdBuffer, err error) {
+	state *State, data IncomingHostData) (newState *State, cmdb *CmdBuffer, err error) {
 //
 	desired_trigger := fmt.Sprintf("Trigger for key '%s'", key)
 	if trigger != desired_trigger {
@@ -91,7 +91,7 @@ func (cbp *CmdBufferProcessorTestImpl) Process(key string, cmdb *CmdBuffer) erro
 
 func TestRequestImplSimple(t *testing.T) {
 	sk := StateKeeperTestImpl{}
-	sk.Generate([]string{"object1", "object2"})
+	sk.Generate([]string{"host1", "host2"})
 
 	rh := RequestHandlerImpl{
 		TGetter: &TriggersGetterTestImpl{},
@@ -102,13 +102,13 @@ func TestRequestImplSimple(t *testing.T) {
 
 	var data IncomingData
 	jsonTestData := `{
-		"object1": {
+		"host1": {
 			"key1.1": [{
 				"timestamp": 1361785778,
 				"value": 3.14
 			}]
 		},
-		"object2": {
+		"host2": {
 			"key2.1": [{
 				"timestamp": 1361785817,
 				"value": "test string"

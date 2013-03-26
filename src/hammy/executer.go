@@ -2,7 +2,7 @@ package hammy
 
 // Interface for trigger executer
 type Executer interface {
-	// Process trigger for one object
+	// Process trigger for one host
 	ProcessTrigger(key string, trigger string, state *State,
-		data IncomingObjectData) (newState *State, cmdb *CmdBuffer, err error)
+		data IncomingHostData) (newState *State, cmdb *CmdBuffer, err error)
 }

@@ -26,5 +26,5 @@ type SendBuffer interface {
 
 // Reads data from write cache or storage
 type DataReader interface {
-	Read(objKey string, itemKey string, from uint64, to uint64) (data []IncomingValueData, err error)
+	Read(hostKey string, itemKey string, from uint64, to uint64) (data []IncomingValueData, err error)
 }

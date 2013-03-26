@@ -12,10 +12,10 @@ import (
 // It's assumes the table structure like this:
 //
 //  CREATE TABLE `states` (
-//    `obj_key` varchar(255) NOT NULL,
-//    `obj_state` text,
+//    `host` varchar(255) NOT NULL,
+//    `state` text,
 //    `cas` BIGINT NOT NULL DEFAULT 0,
-//    PRIMARY KEY (`obj_key`)
+//    PRIMARY KEY (`host`)
 //  ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 //
 type MySQLStateKeeper struct {
@@ -51,7 +51,7 @@ func (sk *MySQLStateKeeper) Get(key string) (ans StateKeeperAnswer) {
 	var stateRaw []byte
 	var cas uint64
 
-	sqlq := fmt.Sprintf("SELECT `obj_state`, `cas` FROM `%s` WHERE `obj_key` = ?", sk.tableName)
+	sqlq := fmt.Sprintf("SELECT `state`, `cas` FROM `%s` WHERE `host` = ?", sk.tableName)
 	row := sk.db.QueryRow(sqlq, key)
 	err := row.Scan(&stateRaw, &cas)
 
@@ -96,7 +96,7 @@ SUBKEYS:	for i := 0; i < n; i += 10 {
 
 		m := len(subkeys)
 
-		sqlq := fmt.Sprintf("SELECT `obj_key`, `obj_state`, `cas` FROM `%s` WHERE `obj_key` IN (?", sk.tableName)
+		sqlq := fmt.Sprintf("SELECT `host`, `state`, `cas` FROM `%s` WHERE `host` IN (?", sk.tableName)
 		for j := 1; j < m; j++ {
 			sqlq += ", ?"
 		}
@@ -120,11 +120,11 @@ SUBKEYS:	for i := 0; i < n; i += 10 {
 		}
 
 		for rows.Next() {
-			var objK string
+			var hostK string
 			var stateRaw []byte
 			var cas uint64
 
-			err := rows.Scan(&objK, &stateRaw, &cas)
+			err := rows.Scan(&hostK, &stateRaw, &cas)
 			if err != nil {
 				for _, k := range subkeys {
 					states[k] = StateKeeperAnswer{
@@ -139,13 +139,13 @@ SUBKEYS:	for i := 0; i < n; i += 10 {
 			var s State
 			err = json.Unmarshal(stateRaw, &s)
 			if err != nil {
-				states[objK] = StateKeeperAnswer{
+				states[hostK] = StateKeeperAnswer{
 					State: nil,
 					Cas: nil,
 					Err: fmt.Errorf("Unmarshal error: %v", err),
 				}
 			} else {
-				states[objK] = StateKeeperAnswer{
+				states[hostK] = StateKeeperAnswer{
 					State: s,
 					Cas: &cas,
 					Err: nil,
@@ -180,7 +180,7 @@ func (sk *MySQLStateKeeper) Set(key string, data State, cas *uint64) (retry bool
 	}
 
 	if cas == nil {
-		sqlq := fmt.Sprintf("INSERT INTO `%s` SET `obj_key` = ?, `obj_state` = ?, `cas` = ?", sk.tableName)
+		sqlq := fmt.Sprintf("INSERT INTO `%s` SET `host` = ?, `state` = ?, `cas` = ?", sk.tableName)
 		_, e := sk.db.Exec(sqlq, key, stateRaw, 0)
 		if e != nil {
 			// Error may looks like this:
@@ -194,7 +194,7 @@ func (sk *MySQLStateKeeper) Set(key string, data State, cas *uint64) (retry bool
 		}
 	} else {
 		newCas := *cas + 1
-		sqlq := fmt.Sprintf("UPDATE `%s` SET `obj_state` = ?, `cas` = ? WHERE `obj_key` = ? AND `cas` = ?", sk.tableName)
+		sqlq := fmt.Sprintf("UPDATE `%s` SET `state` = ?, `cas` = ? WHERE `host` = ? AND `cas` = ?", sk.tableName)
 		res, e := sk.db.Exec(sqlq, stateRaw, newCas, key, *cas)
 		if e != nil {
 			err = e

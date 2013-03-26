@@ -10,9 +10,9 @@ import (
 // It's assumes the table structure like this:
 //
 //  CREATE TABLE `triggers` (
-//    `obj_key` varchar(255) NOT NULL,
-//    `obj_trigger` text,
-//    PRIMARY KEY (`obj_key`)
+//    `host` varchar(255) NOT NULL,
+//    `trigger` text,
+//    PRIMARY KEY (`host`)
 //  ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 //
 type MySQLTriggersGetter struct {
@@ -59,7 +59,7 @@ func (tg *MySQLTriggersGetter) MGet(keys []string) (triggers map[string]string, 
 
 		m := len(subkeys)
 
-		sql := fmt.Sprintf("SELECT `obj_key`, `obj_trigger` FROM `%s` WHERE `obj_key` IN (?", tg.tableName)
+		sql := fmt.Sprintf("SELECT `host`, `trigger` FROM `%s` WHERE `host` IN (?", tg.tableName)
 		for j := 1; j < m; j++ {
 			sql += ", ?"
 		}

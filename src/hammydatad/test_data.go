@@ -12,9 +12,9 @@ import "hammy"
 type TestDataReader struct {
 }
 
-func (tr *TestDataReader) Read(objKey string, itemKey string, from uint64, to uint64) (data []hammy.IncomingValueData, err error) {
-	if objKey != "__test" {
-		panic(fmt.Sprintf("Requested test data for key %#v", objKey))
+func (tr *TestDataReader) Read(hostKey string, itemKey string, from uint64, to uint64) (data []hammy.IncomingValueData, err error) {
+	if hostKey != "__test" {
+		panic(fmt.Sprintf("Requested test data for key %#v", hostKey))
 	}
 
 	switch itemKey {

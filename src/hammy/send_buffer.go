@@ -57,10 +57,10 @@ func (sb *SendBufferImpl) send(data *list.List) {
 	for e := data.Front(); e != nil; e = e.Next() {
 		// e.Value is *IncomingData (panic otherwise)
 		eData := e.Value.(*IncomingData)
-		for objK, objV := range *eData {
-			mV, objFound := mData[objK]
-			if objFound {
-				for k, v := range objV {
+		for hostK, hostV := range *eData {
+			mV, hostFound := mData[hostK]
+			if hostFound {
+				for k, v := range hostV {
 					iArr, kFound := mV[k]
 					if kFound {
 						newIArr := make([]IncomingValueData, len(v) + len(iArr))
@@ -76,7 +76,7 @@ func (sb *SendBufferImpl) send(data *list.List) {
 					}
 				}
 			} else {
-				mData[objK] = objV
+				mData[hostK] = hostV
 			}
 		}
 	}

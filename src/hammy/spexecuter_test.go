@@ -118,7 +118,7 @@ func TestSPExecuterSimple(t *testing.T) {
 	key := "test1"
 	trigger := `sss@^&%GGGkll""''`
 	state := State{}
-	data := IncomingObjectData{}
+	data := IncomingHostData{}
 
 	newState, cmdb, err := e.ProcessTrigger(key, trigger, &state, data)
 	if err != nil {
@@ -163,7 +163,7 @@ func TestSPExecuterKills(t *testing.T) {
 		key := "test1"
 		trigger := `sss@^&%GGGkll""''`
 		state := State{}
-		data := IncomingObjectData{}
+		data := IncomingHostData{}
 
 		newState, cmdb, err := e.ProcessTrigger(key, trigger, &state, data)
 		if err != nil {
@@ -223,7 +223,7 @@ func TestSPExecuterDeads(t *testing.T) {
 		key := "test1"
 		trigger := `sss@^&%GGGkll""''`
 		state := State{}
-		data := IncomingObjectData{}
+		data := IncomingHostData{}
 
 		newState, cmdb, err := e.ProcessTrigger(key, trigger, &state, data)
 		if err != nil {

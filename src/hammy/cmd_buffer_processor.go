@@ -40,15 +40,15 @@ func (cbp *CmdBufferProcessorImpl) log(key string, message string) error {
 }
 
 func (cbp *CmdBufferProcessorImpl) processSend(key string, opts map[string]interface{}) {
-	objNameRaw := opts["object"]
-	var objName string
-	if objNameRaw == nil {
-		objName = key
+	hostNameRaw := opts["host"]
+	var hostName string
+	if hostNameRaw == nil {
+		hostName = key
 	} else {
 		var converted bool
-		objName, converted = objNameRaw.(string)
+		hostName, converted = hostNameRaw.(string)
 		if !converted {
-			cbp.log(key, fmt.Sprintf("Invalid send: invalid object name (command options: %v)", opts))
+			cbp.log(key, fmt.Sprintf("Invalid send: invalid host name (command options: %v)", opts))
 			return
 		}
 	}
@@ -66,13 +66,13 @@ func (cbp *CmdBufferProcessorImpl) processSend(key string, opts map[string]inter
 	}
 
 	data := make(IncomingData)
-	objData := make(IncomingObjectData)
-	objValue := IncomingValueData{
+	hostData := make(IncomingHostData)
+	hostValue := IncomingValueData{
 		Timestamp: uint64(time.Now().Unix()),
 		Value: value,
 	}
-	objData[itemKey] = []IncomingValueData{objValue}
-	data[objName] = objData
+	hostData[itemKey] = []IncomingValueData{hostValue}
+	data[hostName] = hostData
 
 	cbp.SBuffer.Push(&data)
 }
@@ -158,13 +158,13 @@ func (cbp *CmdBufferProcessorImpl) processSave(key string, opts map[string]inter
 	}
 
 	data := make(IncomingData)
-	objData := make(IncomingObjectData)
-	objValue := IncomingValueData{
+	hostData := make(IncomingHostData)
+	hostValue := IncomingValueData{
 		Timestamp: ts,
 		Value: value,
 	}
-	objData[itemKey] = []IncomingValueData{objValue}
-	data[key] = objData
+	hostData[itemKey] = []IncomingValueData{hostValue}
+	data[key] = hostData
 
 	cbp.Saver.Push(&data)
 }

@@ -28,16 +28,16 @@ func TestCmdBufferSendCommand(t *testing.T) {
 	cmdb[0].Options = make(map[string]interface{})
 	cmdb[0].Options["key"] = "key1"
 	cmdb[0].Options["value"] = "hello"
-	err := cbp.Process("obj1", &cmdb)
+	err := cbp.Process("host1", &cmdb)
 
 	if err != nil {
 		t.Errorf("Process error: %#v", err)
 	}
 
-	if obj1, found := rh.Data["obj1"]; !found {
-		t.Errorf("`obj1` not found (data: %v)", rh.Data)
+	if host1, found := rh.Data["host1"]; !found {
+		t.Errorf("`host1` not found (data: %v)", rh.Data)
 	} else {
-		if key1, found := obj1["key1"]; !found {
+		if key1, found := host1["key1"]; !found {
 			t.Errorf("`key1` not found (data: %v)", rh.Data)
 		} else {
 			if len(key1) != 1 {
@@ -56,9 +56,9 @@ func TestCmdBufferSendCommand(t *testing.T) {
 		}
 	}
 
-	cmdb[0].Options["object"] = "obj2"
+	cmdb[0].Options["host"] = "host2"
 	cmdb[0].Options["value"] = "world"
-	err = cbp.Process("obj1", &cmdb)
+	err = cbp.Process("host1", &cmdb)
 
 	if err != nil {
 		t.Errorf("Process error: %#v", err)
@@ -66,10 +66,10 @@ func TestCmdBufferSendCommand(t *testing.T) {
 
 	time.Sleep(10 * time.Millisecond)
 
-	if obj2, found := rh.Data["obj2"]; !found {
-		t.Errorf("`obj2` not found (data: %v)", rh.Data)
+	if host2, found := rh.Data["host2"]; !found {
+		t.Errorf("`host2` not found (data: %v)", rh.Data)
 	} else {
-		if key1, found := obj2["key1"]; !found {
+		if key1, found := host2["key1"]; !found {
 			t.Errorf("`key1` not found (data: %v)", rh.Data)
 		} else {
 			if len(key1) != 1 {

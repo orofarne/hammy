@@ -109,7 +109,7 @@ type Config struct {
 		User string
 		// DB user password
 		Password string
-		// table that contains triggers (obj_key, obj_trigger)
+		// table that contains triggers (host, trigger)
 		Table string
 		// Limit for parallel connections
 		MaxConn int
@@ -124,7 +124,7 @@ type Config struct {
 		User string
 		// DB user password
 		Password string
-		// table that contains states (obj_key, obj_state, cas)
+		// table that contains states (host, state, cas)
 		Table string
 		// Limit for parallel connections
 		MaxConn int

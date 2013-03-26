@@ -23,7 +23,7 @@ type WorkerProcessInput struct {
 	Key string
 	Trigger string
 	State *State
-	IData IncomingObjectData
+	IData IncomingHostData
 }
 
 type WorkerProcessOutput struct {
@@ -58,7 +58,7 @@ func NewSPExecuter(cfg Config) *SPExecuter {
 }
 
 func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
-		data IncomingObjectData) (newState *State, cmdb *CmdBuffer, err error) {
+		data IncomingHostData) (newState *State, cmdb *CmdBuffer, err error) {
 //
 	cmdb = NewCmdBuffer(0)
 	newState = NewState()

@@ -41,12 +41,12 @@ func NewCouchbaseDataReader(cfg Config) (*CouchbaseDataReader, error) {
 	return s, nil
 }
 
-func (cr *CouchbaseDataReader) Read(objKey string, itemKey string, from uint64, to uint64) (data []IncomingValueData, err error) {
+func (cr *CouchbaseDataReader) Read(hostKey string, itemKey string, from uint64, to uint64) (data []IncomingValueData, err error) {
 	// Construct keys slice
 	bucketFrom, bucketTo := (from / CouchbaseDataBucketQuantum), (to / CouchbaseDataBucketQuantum)
 	keys := make([]string, (bucketTo - bucketFrom + 1))
 	for i, k := 0, bucketFrom; k <= bucketTo; k++ {
-		keys[i] = fmt.Sprintf("%s$%s$%d", objKey, itemKey, k)
+		keys[i] = fmt.Sprintf("%s$%s$%d", hostKey, itemKey, k)
 		i++
 	}
 

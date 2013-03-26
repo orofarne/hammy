@@ -3,9 +3,9 @@
 require 'msgpack'
 
 class EvalEnv
-	def initialize(state, objectname)
+	def initialize(state, host)
 		@state = state
-		@objectname = objectname
+		@host = host
 		@cmdbuf = []
 	end
 
@@ -44,8 +44,8 @@ class EvalEnv
 		}
 	end
 
-	def objectname()
-		@objectname
+	def host()
+		@host
 	end
 
 	def key()

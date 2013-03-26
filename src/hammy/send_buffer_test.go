@@ -14,13 +14,13 @@ func TestSendBufferSimple(t *testing.T) {
 	sb := NewSendBufferImpl(&rh, cfg)
 
 	json1 := `{
-		"object1": {
+		"host1": {
 			"key1.1": [{
 				"timestamp": 1361785778,
 				"value": 3.14
 			}]
 		},
-		"object2": {
+		"host2": {
 			"key2.1": [{
 				"timestamp": 1361785817,
 				"value": "test string"
@@ -28,7 +28,7 @@ func TestSendBufferSimple(t *testing.T) {
 		}
 	}`
 	json2 := `{
-		"object2": {
+		"host2": {
 			"key2.1": [{
 				"timestamp": 1361785819,
 				"value": "test string 2"
@@ -42,7 +42,7 @@ func TestSendBufferSimple(t *testing.T) {
 				"value": 999.3
 			}]
 		},
-		"object3": {
+		"host3": {
 			"key3.1": [{
 				"timestamp": 1361785788,
 				"value": 77.0
@@ -67,10 +67,10 @@ func TestSendBufferSimple(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 
 	// Check data
-	if obj1, found := rh.Data["object1"]; !found {
-		t.Errorf("`object1` not found")
+	if host1, found := rh.Data["host1"]; !found {
+		t.Errorf("`host1` not found")
 	} else {
-		if key11, found := obj1["key1.1"]; !found {
+		if key11, found := host1["key1.1"]; !found {
 			t.Errorf("`key1.1` not found")
 		} else {
 			if len(key11) != 1 {
@@ -88,10 +88,10 @@ func TestSendBufferSimple(t *testing.T) {
 			}
 		}
 	}
-	if obj2, found := rh.Data["object2"]; !found {
-		t.Errorf("`object2` not found")
+	if host2, found := rh.Data["host2"]; !found {
+		t.Errorf("`host2` not found")
 	} else {
-		if key21, found := obj2["key2.1"]; !found {
+		if key21, found := host2["key2.1"]; !found {
 			t.Errorf("`key2.1` not found")
 		} else {
 			if len(key21) != 2 {
@@ -117,7 +117,7 @@ func TestSendBufferSimple(t *testing.T) {
 				}
 			}
 		}
-		if key22, found := obj2["key2.2"]; !found {
+		if key22, found := host2["key2.2"]; !found {
 			t.Errorf("`key2.2` not found")
 		} else {
 			if len(key22) != 2 {
@@ -144,10 +144,10 @@ func TestSendBufferSimple(t *testing.T) {
 			}
 		}
 	}
-	if obj3, found := rh.Data["object3"]; !found {
-		t.Errorf("`object3` not found")
+	if host3, found := rh.Data["host3"]; !found {
+		t.Errorf("`host3` not found")
 	} else {
-		if key31, found := obj3["key3.1"]; !found {
+		if key31, found := host3["key3.1"]; !found {
 			t.Errorf("`key3.1` not found")
 		} else {
 			if len(key31) != 1 {

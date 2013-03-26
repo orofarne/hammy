@@ -28,13 +28,13 @@ func (h *HttpServer) ServeValues(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	obj_a := q["object"]
-	if len(obj_a) == 0 {
+	host_a := q["host"]
+	if len(host_a) == 0 {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
-	obj := obj_a[0]
-	if obj == "" {
+	host := host_a[0]
+	if host == "" {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
@@ -64,13 +64,13 @@ func (h *HttpServer) ServeValues(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var dataReader hammy.DataReader
-	if obj == "__test" {
+	if host == "__test" {
 		dataReader = &TestDataReader{}
 	} else {
 		dataReader = h.DReader
 	}
 
-	data, err := dataReader.Read(obj, key, from, to)
+	data, err := dataReader.Read(host, key, from, to)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		fmt.Fprintf(w, "%v\n", err)

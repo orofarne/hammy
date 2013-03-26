@@ -56,18 +56,18 @@ func (s *CouchbaseSaver) Push(data *IncomingData) {
 
 const CouchbaseDataBucketQuantum = 7200 // 2 hours
 
-func CouchbaseSaverBucketKey(objKey string, itemKey string, timestamp uint64) string {
+func CouchbaseSaverBucketKey(hostKey string, itemKey string, timestamp uint64) string {
 	var bucketId uint64
 	bucketId = timestamp / CouchbaseDataBucketQuantum
-	return fmt.Sprintf("%s$%s$%d", objKey, itemKey, bucketId)
+	return fmt.Sprintf("%s$%s$%d", hostKey, itemKey, bucketId)
 }
 
 func (s *CouchbaseSaver) worker() {
 	for data := range s.dataChan {
-		for objK, objV := range *data {
-			for itemK, itemV := range objV {
+		for hostK, hostV := range *data {
+			for itemK, itemV := range hostV {
 				for _, v := range itemV {
-					err := s.saveItem(objK, itemK, v)
+					err := s.saveItem(hostK, itemK, v)
 					if err != nil {
 						log.Printf("saveItem error: %v", err)
 					}
@@ -77,8 +77,8 @@ func (s *CouchbaseSaver) worker() {
 	}
 }
 
-func (s *CouchbaseSaver) saveItem(objKey string, itemKey string, val IncomingValueData) error {
-	bucketKey := CouchbaseSaverBucketKey(objKey, itemKey, val.Timestamp)
+func (s *CouchbaseSaver) saveItem(hostKey string, itemKey string, val IncomingValueData) error {
+	bucketKey := CouchbaseSaverBucketKey(hostKey, itemKey, val.Timestamp)
 
 	buf, err := msgpack.Marshal(val)
 	if err != nil {

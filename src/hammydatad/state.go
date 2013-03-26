@@ -12,23 +12,23 @@ import "hammy"
 func (h *HttpServer) ServeState(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
-	obj_a := q["object"]
-	if len(obj_a) == 0 {
+	host_a := q["host"]
+	if len(host_a) == 0 {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
-	obj := obj_a[0]
-	if obj == "" {
+	host := host_a[0]
+	if host == "" {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
 	var ans hammy.StateKeeperAnswer
 
-	if obj == "__test" {
+	if host == "__test" {
 		ans = GenTestState()
 	} else {
-		ans = h.SKeeper.Get(obj)
+		ans = h.SKeeper.Get(host)
 		if ans.Err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			fmt.Fprintf(w, "%v\n", ans.Err)

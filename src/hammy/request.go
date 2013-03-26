@@ -5,18 +5,18 @@ type IncomingValueData struct {
 	Value interface{}
 }
 
-type IncomingObjectData map[string][]IncomingValueData
+type IncomingHostData map[string][]IncomingValueData
 
 // Type for incoming monitoring data
 // Format (in json notation):
 //  {
-//    "object1": {
+//    "host1": {
 //      "key1.1": [{
 //        "Timestamp": 1361785778,
 //        "Value": 3.14
 //      }]
 //    },
-//    "object2": {
+//    "host2": {
 //      "key2.1": [{
 //        "Timestamp": 1361785817,
 //        "Value": "test string"
@@ -31,14 +31,14 @@ type IncomingObjectData map[string][]IncomingValueData
 //      }]
 //    }
 //  }
-type IncomingData map[string]IncomingObjectData
+type IncomingData map[string]IncomingHostData
 
 // Interface for incoming data handler
 type RequestHandler interface {
 	Handle(data IncomingData) map[string]error
 }
 
-// Type for state of an object
+// Type for state of an host
 // maps keys to values with timestamps of last update
 // Format (in json notation):
 //  {

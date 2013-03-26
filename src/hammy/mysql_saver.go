@@ -12,19 +12,19 @@ import (
 // It's assumes the tables structure like this:
 //
 //  CREATE TABLE `history` (
-//    `obj_key` varchar(255) NOT NULL,
-//    `item_key` varchar(255) NOT NULL,
+//    `host` varchar(255) NOT NULL,
+//    `item` varchar(255) NOT NULL,
 //    `timestamp` DATETIME NOT NULL,
 //    `value` DOUBLE NOT NULL,
-//    PRIMARY KEY (`obj_key`, `item_key`, `timestamp`)
+//    PRIMARY KEY (`host`, `item`, `timestamp`)
 //  ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 //
 //  CREATE TABLE `history_log` (
-//    `obj_key` varchar(255) NOT NULL,
-//    `item_key` varchar(255) NOT NULL,
+//    `host` varchar(255) NOT NULL,
+//    `item` varchar(255) NOT NULL,
 //    `timestamp` DATETIME NOT NULL,
 //    `value` TEXT NOT NULL,
-//    PRIMARY KEY (`obj_key`, `item_key`, `timestamp`)
+//    PRIMARY KEY (`host`, `item`, `timestamp`)
 //  ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 //
 type MySQLSaver struct {
@@ -59,8 +59,8 @@ func (s *MySQLSaver) Push(data *IncomingData) {
 		s.pool <- 1
 	}()
 
-	for objK, objV := range *data {
-		for itemK, itemV := range objV {
+	for hostK, hostV := range *data {
+		for itemK, itemV := range hostV {
 			for _, v := range itemV {
 				var tName string
 				if strings.HasSuffix(itemK, "#log") {
@@ -68,8 +68,8 @@ func (s *MySQLSaver) Push(data *IncomingData) {
 				} else {
 					tName = s.tableName
 				}
-				sqlp := fmt.Sprintf("INSERT INTO `%s` SET `obj_key` = ?, `item_key` = ?, `timestamp` = FROM_UNIXTIME(?), `value` = ?", tName)
-				_, err := s.db.Exec(sqlp, objK, itemK, v.Timestamp, v.Value)
+				sqlp := fmt.Sprintf("INSERT INTO `%s` SET `host` = ?, `item` = ?, `timestamp` = FROM_UNIXTIME(?), `value` = ?", tName)
+				_, err := s.db.Exec(sqlp, hostK, itemK, v.Timestamp, v.Value)
 				if err != nil {
 					log.Printf("MySQLSaver error: %v", err)
 				}

@@ -34,7 +34,7 @@ func NewMySQLDataReader(cfg Config) (dr *MySQLDataReader, err error) {
 	return
 }
 
-func (dr *MySQLDataReader) Read(objKey string, itemKey string, from uint64, to uint64) (data []IncomingValueData, err error) {
+func (dr *MySQLDataReader) Read(hostKey string, itemKey string, from uint64, to uint64) (data []IncomingValueData, err error) {
 	data = make([]IncomingValueData, 0)
 
 	var tName string
@@ -46,8 +46,8 @@ func (dr *MySQLDataReader) Read(objKey string, itemKey string, from uint64, to u
 		tName = dr.tableName
 	}
 
-	sqlq := fmt.Sprintf("SELECT TO_UNIXTIME(`timestamp`), `value` FROM `%s` WHERE `obj_key` = ? AND `item_key` = ? AND `timestamp` >= FROM_UNIXTIME(?) AND `timestamp` <= FROM_UNIXTIME(?) ORDER BY `timestamp`", tName)
-	rows, err := dr.db.Query(sqlq, objKey, itemKey, from, to)
+	sqlq := fmt.Sprintf("SELECT TO_UNIXTIME(`timestamp`), `value` FROM `%s` WHERE `host` = ? AND `item` = ? AND `timestamp` >= FROM_UNIXTIME(?) AND `timestamp` <= FROM_UNIXTIME(?) ORDER BY `timestamp`", tName)
+	rows, err := dr.db.Query(sqlq, hostKey, itemKey, from, to)
 	if err != nil {
 		return
 	}
