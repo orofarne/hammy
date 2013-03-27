@@ -33,9 +33,9 @@ class EvalEnv
 
 	def cmd(cmd, options = {})
 		# Default options
-		options[:key] = @key
-		options[:timestamp] = @timestamp
-		options[:value] = @value
+		options[:key] ||= @key
+		options[:timestamp] ||= @timestamp
+		options[:value] ||= @value
 
 		@cmdbuf << {
 			'Cmd' => cmd,
