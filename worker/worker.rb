@@ -27,7 +27,7 @@ class EvalEnv
 
 	def each_state()
 		@state.each { |k, v|
-			yield k, v['Value'], ['LastUpdate']
+			yield k, v['Value'], v['LastUpdate']
 		}
 	end
 
