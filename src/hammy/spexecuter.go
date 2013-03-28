@@ -3,6 +3,7 @@ package hammy
 import (
 	"fmt"
 	"io"
+	"time"
 	"os/exec"
 	"bytes"
 	"syscall"
@@ -36,6 +37,7 @@ type SPExecuter struct {
 	CmdLine string
 	MaxIter uint
 	Workers chan *process
+	Timeout time.Duration
 }
 
 // Create new instance of SPExecutor
@@ -49,6 +51,7 @@ func NewSPExecuter(cfg Config) *SPExecuter {
 	e.CmdLine = cfg.Workers.CmdLine
 	e.MaxIter = cfg.Workers.MaxIter
 	e.Workers = make(chan *process, cfg.Workers.PoolSize)
+	e.Timeout = time.Duration(cfg.Workers.Timeout) * time.Second
 
 	for i := uint(0); i < cfg.Workers.PoolSize; i++ {
 		e.Workers <- &process{}
@@ -74,6 +77,10 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 	}
 	defer e.freeWorker(worker)
 
+	// Set up timeout
+	cEnd := make(chan int)
+	go e.workerTimeout(worker, cEnd)
+
 	// marshal and send args
 	pInput := WorkerProcessInput{
 		Key: key,
@@ -95,7 +102,23 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 		err = fmt.Errorf("SPExexuter error: %#v, child stderr: %#v", err, worker.Stderr.String())
 	}
 
+	close(cEnd)
+
 	return
+}
+
+// timeout task
+func (e *SPExecuter) workerTimeout(worker *process, cEnd chan int) {
+	select {
+	case <-cEnd:
+		return
+	case <-time.After(e.Timeout):
+		err := worker.Process.Kill()
+		if err != nil {
+			log.Printf("SPExecuter: Process.Kill error: %#v", err)
+		}
+		worker.Cmd = nil
+	}
 }
 
 // Fetch worker (may be wait for free worker)

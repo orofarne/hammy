@@ -44,6 +44,8 @@ type Config struct {
 		CmdLine string
 		// Worker live limit
 		MaxIter uint
+		// Worker timeout (before kill)
+		Timeout uint
 	}
 	// Send buffer
 	SendBuffer struct {
@@ -188,6 +190,7 @@ func SetConfigDefaults(cfg *Config) error {
 	if cfg.Workers.PoolSize == 0 { cfg.Workers.PoolSize = 5 }
 	if cfg.Workers.CmdLine == "" { return fmt.Errorf("Empty cfg.Workers.CmdLine") }
 	if cfg.Workers.MaxIter == 0 { cfg.Workers.MaxIter = 1000 }
+	if cfg.Workers.Timeout == 0 { cfg.Workers.Timeout = 1 }
 
 	// Section [CouchbaseTriggers]
 	if cfg.CouchbaseTriggers.Active {

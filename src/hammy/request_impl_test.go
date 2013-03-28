@@ -34,13 +34,13 @@ func (sk *StateKeeperTestImpl) Generate(keys []string) {
 }
 
 func (sk *StateKeeperTestImpl) Get(key string) StateKeeperAnswer {
-	fmt.Printf("StateKeeperTestImpl.Get(%#v)\n", key)
+	//fmt.Printf("StateKeeperTestImpl.Get(%#v)\n", key)
 
 	return sk.Data[key]
 }
 
 func (sk *StateKeeperTestImpl) MGet(keys []string) (ret map[string]StateKeeperAnswer) {
-	fmt.Printf("StateKeeperTestImpl.MGet(%#v)\n", keys)
+	//fmt.Printf("StateKeeperTestImpl.MGet(%#v)\n", keys)
 
 	ret = make(map[string]StateKeeperAnswer)
 	for _, key := range keys {
@@ -50,7 +50,7 @@ func (sk *StateKeeperTestImpl) MGet(keys []string) (ret map[string]StateKeeperAn
 }
 
 func (sk *StateKeeperTestImpl) Set(key string, data State, cas *uint64) (retry bool, err error) {
-	fmt.Printf("StateKeeperTestImpl.Set(%#v, %#v, %#v)\n", key, data, cas)
+	//fmt.Printf("StateKeeperTestImpl.Set(%#v, %#v, %#v)\n", key, data, cas)
 
 	s := sk.Data[key]
 

@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"net/http"
 	"time"
-	"fmt"
+	//"fmt"
 	"io/ioutil"
 	"encoding/json"
 	"github.com/ugorji/go-msgpack"
@@ -18,7 +18,7 @@ type RequestHandlerTestImpl struct {
 func (rh *RequestHandlerTestImpl) Handle(data IncomingData) (errs map[string]error) {
 	errs = make(map[string]error)
 	rh.Data = data
-	fmt.Printf("--> Got new data:\n%#v\n\n", data)
+	//fmt.Printf("--> Got new data:\n%#v\n\n", data)
 	return
 }
 
