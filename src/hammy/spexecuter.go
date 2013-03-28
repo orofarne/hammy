@@ -113,6 +113,7 @@ func (e *SPExecuter) workerTimeout(worker *process, cEnd chan int) {
 	case <-cEnd:
 		return
 	case <-time.After(e.Timeout):
+		log.Printf("SPExecuter: worker [%v] timed out", worker.Process.Pid)
 		err := worker.Process.Kill()
 		if err != nil {
 			log.Printf("SPExecuter: Process.Kill error: %#v", err)
