@@ -3,6 +3,7 @@ package hammy
 import (
 	"fmt"
 	"encoding/json"
+	"encoding/binary"
 	"github.com/couchbaselabs/go-couchbase"
 	"github.com/dustin/gomemcached"
 	"github.com/dustin/gomemcached/client"
@@ -12,33 +13,33 @@ type CouchbaseStateKeeper struct {
 	Client *couchbase.Client
 	Pool *couchbase.Pool
 	Bucket *couchbase.Bucket
-	Ttl int
+	Ttl uint32
 }
 
 func NewCouchbaseStateKeeper(cfg Config) (*CouchbaseStateKeeper, error) {
-	tg := new(CouchbaseStateKeeper)
+	sk := new(CouchbaseStateKeeper)
 
 	c, err := couchbase.Connect(cfg.CouchbaseStates.ConnectTo)
 	if err != nil {
 		return nil, err
 	}
-	tg.Client = &c
+	sk.Client = &c
 
-	p, err := tg.Client.GetPool(cfg.CouchbaseStates.Pool)
+	p, err := sk.Client.GetPool(cfg.CouchbaseStates.Pool)
 	if err != nil {
 		return nil, err
 	}
-	tg.Pool = &p
+	sk.Pool = &p
 
-	b, err := tg.Pool.GetBucket(cfg.CouchbaseStates.Bucket)
+	b, err := sk.Pool.GetBucket(cfg.CouchbaseStates.Bucket)
 	if err != nil {
 		return nil, err
 	}
-	tg.Bucket = b
+	sk.Bucket = b
 
-	tg.Ttl = cfg.CouchbaseStates.Ttl
+	sk.Ttl = uint32(cfg.CouchbaseStates.Ttl)
 
-	return tg, nil
+	return sk, nil
 }
 
 func (sk *CouchbaseStateKeeper) Get(key string) StateKeeperAnswer {
@@ -130,6 +131,7 @@ func (sk *CouchbaseStateKeeper) Set(key string, data State, cas *uint64) (retry 
 		if cas != nil {
 			req.Cas = *cas
 		}
+		binary.BigEndian.PutUint32(req.Extras[4:8], sk.Ttl)
 
 		resp, e := mc.Send(req)
 		if e != nil {

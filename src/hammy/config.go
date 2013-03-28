@@ -72,7 +72,7 @@ type Config struct {
 		Pool string
 		// e.g. "default"
 		Bucket string
-		// TTL in seconds, default 86400
+		// TTL in seconds, default 86400 (day)
 		Ttl int
 	}
 	// Data saver
@@ -89,6 +89,8 @@ type Config struct {
 		QueueSize uint
 		// Connections for saving
 		SavePoolSize uint
+		// TTL in seconds, default 259200 (3 days)
+		Ttl int
 	}
 	// Data reader
 	CouchbaseDataReader struct {
@@ -214,6 +216,7 @@ func SetConfigDefaults(cfg *Config) error {
 		if cfg.CouchbaseSaver.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseSaver.Bucket") }
 		if cfg.CouchbaseSaver.QueueSize == 0 { cfg.CouchbaseSaver.QueueSize = 10000 }
 		if cfg.CouchbaseSaver.SavePoolSize == 0 { cfg.CouchbaseSaver.SavePoolSize = 10 }
+		if cfg.CouchbaseSaver.Ttl == 0 { cfg.CouchbaseSaver.Ttl = 259200 }
 	}
 
 	// Section [CouchbaseDataReader]

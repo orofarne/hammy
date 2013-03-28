@@ -3,6 +3,7 @@ package hammy
 import (
 	"fmt"
 	"log"
+	"encoding/binary"
 	"github.com/ugorji/go-msgpack"
 	"github.com/couchbaselabs/go-couchbase"
 	"github.com/dustin/gomemcached"
@@ -15,6 +16,7 @@ type CouchbaseSaver struct {
 	pool *couchbase.Pool
 	bucket *couchbase.Bucket
 	dataChan chan *IncomingData
+	Ttl uint32
 }
 
 // Create new saver
@@ -38,6 +40,8 @@ func NewCouchbaseSaver(cfg Config) (*CouchbaseSaver, error) {
 		return nil, err
 	}
 	s.bucket = b
+
+	s.Ttl = uint32(cfg.CouchbaseSaver.Ttl)
 
 	// Process queue
 	s.dataChan = make(chan *IncomingData, cfg.CouchbaseSaver.QueueSize)
@@ -115,6 +119,7 @@ RETRY:
 					Extras: []byte{0, 0, 0, 0, 0, 0, 0, 0},
 					Body: buf,
 				}
+				binary.BigEndian.PutUint32(req.Extras[4:8], s.Ttl)
 
 				resp, e = mc.Send(req)
 				if resp == nil {

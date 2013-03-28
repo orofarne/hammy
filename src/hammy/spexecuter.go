@@ -103,7 +103,7 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 	if err != nil {
 		timedOut := <- cTimedOut
 		if timedOut {
-			err = fmt.Errorf("SPExexuter timeout: %#v, child stderr: %#v, pInput: %#v", err, worker.Stderr.String(), pInput)
+			err = fmt.Errorf("SPExexuter timeout for host %v", key)
 		} else {
 			err = fmt.Errorf("SPExexuter error: %#v, child stderr: %#v", err, worker.Stderr.String())
 		}
