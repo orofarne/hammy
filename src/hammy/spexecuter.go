@@ -78,8 +78,9 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 	defer e.freeWorker(worker)
 
 	// Set up timeout
+	cTimedOut := make(chan bool)
 	cEnd := make(chan int)
-	go e.workerTimeout(worker, cEnd)
+	go e.workerTimeout(worker, cEnd, cTimedOut)
 
 	// marshal and send args
 	pInput := WorkerProcessInput{
@@ -98,27 +99,30 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 	// wait, read and unmarshal result
 	dec := msgpack.NewDecoder(worker.Stdout, nil)
 	err = dec.Decode(&res)
-	if err != nil {
-		err = fmt.Errorf("SPExexuter error: %#v, child stderr: %#v", err, worker.Stderr.String())
-	}
-
 	close(cEnd)
-
+	if err != nil {
+		timedOut := <- cTimedOut
+		if timedOut {
+			err = fmt.Errorf("SPExexuter timeout: %#v, child stderr: %#v, pInput: %#v", err, worker.Stderr.String(), pInput)
+		} else {
+			err = fmt.Errorf("SPExexuter error: %#v, child stderr: %#v", err, worker.Stderr.String())
+		}
+	}
 	return
 }
 
 // timeout task
-func (e *SPExecuter) workerTimeout(worker *process, cEnd chan int) {
+func (e *SPExecuter) workerTimeout(worker *process, cEnd chan int, cRes chan bool) {
 	select {
 	case <-cEnd:
-		return
+		cRes <- false
 	case <-time.After(e.Timeout):
-		log.Printf("SPExecuter: worker [%v] timed out", worker.Process.Pid)
 		err := worker.Process.Kill()
 		if err != nil {
 			log.Printf("SPExecuter: Process.Kill error: %#v", err)
 		}
 		worker.Cmd = nil
+		cRes <- true
 	}
 }
 
