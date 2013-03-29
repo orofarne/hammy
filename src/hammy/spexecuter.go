@@ -117,13 +117,45 @@ func (e *SPExecuter) workerTimeout(worker *process, cEnd chan int, cRes chan boo
 	case <-cEnd:
 		cRes <- false
 	case <-time.After(e.Timeout):
-		err := worker.Process.Kill()
+		err := e.workerKill(worker)
 		if err != nil {
-			log.Printf("SPExecuter: Process.Kill error: %#v", err)
+			log.Printf("%s", err)
 		}
-		worker.Cmd = nil
 		cRes <- true
 	}
+}
+
+func (e *SPExecuter) workerKill(worker *process) error {
+	defer func() {
+		worker.Cmd = nil
+	}()
+
+	if worker.Cmd == nil || worker.Cmd.Process == nil {
+		return nil
+	}
+
+	err := worker.Process.Kill()
+	switch err {
+		case nil:
+			//
+		case syscall.ECHILD:
+			return nil
+		default:
+			return fmt.Errorf("SPExecuter: Process.Kill error: %#v", err)
+	}
+
+	// Zombies is not good for us...
+	_, err = worker.Process.Wait()
+	switch err {
+		case nil:
+			//
+		case syscall.ECHILD:
+			return nil
+		default:
+			return fmt.Errorf("SPExecuter: Process.Wait error: %#v", err)
+	}
+
+	return nil
 }
 
 // Fetch worker (may be wait for free worker)
@@ -144,15 +176,14 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 		switch {
 			case err == nil && wpid == 0:
 				// Do nothing
-			case err == nil && status.Exited():
+			case err == nil && status.Exited() || err == syscall.ECHILD:
 				worker.Cmd = nil
 			case err != nil:
 				log.Printf("SPExecuter: syscall.Wait4 error: %#v", err)
-				err = worker.Process.Kill()
+				err = e.workerKill(worker)
 				if err != nil {
-					log.Printf("SPExecuter: Process.Kill error: %#v", err)
+					log.Printf("%s", err)
 				}
-				worker.Cmd = nil
 			default:
 				// Do nothing
 		}
@@ -187,11 +218,10 @@ func (e *SPExecuter) freeWorker(worker *process) {
 
 	// Check iteration count
 	if worker.Count >= e.MaxIter {
-		err := worker.Process.Kill()
+		err := e.workerKill(worker)
 		if err != nil {
-			log.Printf("SPExecuter: Process.Kill error: %#v", err)
+			log.Printf("%s", err)
 		}
-		worker.Cmd = nil
 	}
 
 	// Return worker to the queue
