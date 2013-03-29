@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 	"container/list"
+	"encoding/json"
 )
 
 // Buffer for reprocessed data
@@ -85,6 +86,16 @@ func (sb *SendBufferImpl) send(data *list.List) {
 	errs := sb.rHandler.Handle(mData)
 
 	if len(errs) > 0 {
-		log.Printf("!! Error in SendBuffer: %v", errs) // FIXME
+		// FIXME
+		errs_str := make(map[string]string)
+		for k, v := range errs {
+			errs_str[k] = v.Error()
+		}
+		b, err := json.Marshal(errs_str)
+		if err == nil {
+			log.Printf("!! Error in SendBuffer: %s", b)
+		} else {
+			log.Printf("!! Error in SendBuffer: <unable to dump errs: %#v>", err)
+		}
 	}
 }
