@@ -33,6 +33,20 @@ type IncomingHostData map[string][]IncomingValueData
 //  }
 type IncomingData map[string]IncomingHostData
 
+// Type for incoming monitoring data request
+type IncomingMessage struct {
+	// Incoming monitoring data
+	Data IncomingData
+	// Processing level (0 for new data)
+	// Increments after each resend
+	Level uint32
+}
+
+// Response
+type ResponseMessage struct {
+	Errors map[string]error
+}
+
 // Interface for incoming data handler
 type RequestHandler interface {
 	Handle(data IncomingData) map[string]error

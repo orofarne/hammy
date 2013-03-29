@@ -57,25 +57,27 @@ func TestHttpInterface(t *testing.T) {
 
 	// Data and checker
 	jsonTestData := `{
-		"host1": {
-			"key1.1": [{
-				"timestamp": 1361785778,
-				"value": 3.14
-			}]
-		},
-		"host2": {
-			"key2.1": [{
-				"timestamp": 1361785817,
-				"value": "test string"
-			}],
-			"key2.2": [{
-				"timestamp": 1361785858,
-				"value": 12345
+		"data": {
+			"host1": {
+				"key1.1": [{
+					"timestamp": 1361785778,
+					"value": 3.14
+				}]
 			},
-			{
-				"timestamp": 1361785927,
-				"value": 999.3
-			}]
+			"host2": {
+				"key2.1": [{
+					"timestamp": 1361785817,
+					"value": "test string"
+				}],
+				"key2.2": [{
+					"timestamp": 1361785858,
+					"value": 12345
+				},
+				{
+					"timestamp": 1361785927,
+					"value": 999.3
+				}]
+			}
 		}
 	}`
 
@@ -164,8 +166,10 @@ func TestHttpInterface(t *testing.T) {
 
 	// Invalid
 	buf = bytes.NewBufferString(`{
-		"host1": {
-			"key1": "booo!"
+		"data": {
+			"host1": {
+				"key1": "booo!"
+			}
 		}
 	}`)
 	resp, err = http.Post(httpAddr, "application/json", buf)
@@ -178,11 +182,11 @@ func TestHttpInterface(t *testing.T) {
 
 	// Message Pack
 	// Valid
-	var buf_data IncomingData
-	err = json.Unmarshal([]byte(jsonTestData), &buf_data)
+	var buf_msg IncomingMessage
+	err = json.Unmarshal([]byte(jsonTestData), &buf_msg)
 	if err != nil { panic("error unmarshaling test data") }
 	enc := msgpack.NewEncoder(buf)
-	err = enc.Encode(buf_data)
+	err = enc.Encode(buf_msg)
 	if err != nil { panic("error remarshaling (to msgpack) test data") }
 
 	resp, err = http.Post(httpAddr, "application/octet-stream", buf)

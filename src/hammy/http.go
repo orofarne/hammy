@@ -62,12 +62,19 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Decode(interface{}) error
 	}
 
+	type DataEncoder interface{
+		Encode(interface{}) error
+	}
+
 	var dataDecoder DataDecoder
+	var dataEncoder DataEncoder
 	switch contentType {
 		case "application/json":
 			dataDecoder = json.NewDecoder(r.Body)
+			dataEncoder = json.NewEncoder(w)
 		case "application/octet-stream":
 			dataDecoder = msgpack.NewDecoder(r.Body, nil)
+			dataEncoder = msgpack.NewEncoder(w)
 		default:
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			fmt.Fprintf(w, "Unsupported Content-Type\n")
@@ -75,8 +82,8 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 	}
 
-	var data IncomingData
-	err := dataDecoder.Decode(&data)
+	var req IncomingMessage
+	err := dataDecoder.Decode(&req)
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		fmt.Fprintf(w, "%v\n", err);
@@ -84,17 +91,23 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errs := h.RHandler.Handle(data)
-	if len(errs) > 0 {
-		// TODO: correct answer to client
+	errs := h.RHandler.Handle(req.Data)
+
+	resp := ResponseMessage{
+		Errors: errs,
+	}
+
+	w.Header().Set("Content-Type", contentType)
+	err = dataEncoder.Encode(&resp)
+
+	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		fmt.Fprintf(w, "%v\n", errs);
-		log.Printf("Internal Server Error: %v", errs)
+		fmt.Fprintf(w, "%v\n", err);
+		log.Printf("Internal Server Error: %v", err)
 		httpServer500Couner.Add(1)
 		return
 	}
 
-	fmt.Fprint(w, "ok\n")
 	httpServer200Couner.Add(1)
 }
 
