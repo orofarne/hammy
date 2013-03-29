@@ -44,7 +44,7 @@ type IncomingMessage struct {
 
 // Response
 type ResponseMessage struct {
-	Errors map[string]error
+	Errors map[string]string
 }
 
 // Interface for incoming data handler

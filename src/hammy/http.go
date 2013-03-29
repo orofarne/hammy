@@ -92,9 +92,13 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	errs := h.RHandler.Handle(req.Data)
+	errs_str := make(map[string]string)
+	for k, e := range errs {
+		errs_str[k] = e.Error()
+	}
 
 	resp := ResponseMessage{
-		Errors: errs,
+		Errors: errs_str,
 	}
 
 	w.Header().Set("Content-Type", contentType)
