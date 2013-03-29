@@ -183,7 +183,7 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 		switch {
 			case err == nil && wpid == 0:
 				// Do nothing
-			case err == nil && status.Exited():
+			case err == nil && status.Exited() || err == syscall.ECHILD:
 				worker.Cmd = nil
 			case err != nil:
 				if err2, ok := err.(*os.SyscallError); ok && err2.Err == syscall.ECHILD {
