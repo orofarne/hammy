@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"time"
+	"os"
 	"os/exec"
 	"bytes"
 	"syscall"
@@ -141,6 +142,9 @@ func (e *SPExecuter) workerKill(worker *process) error {
 		case syscall.ECHILD:
 			return nil
 		default:
+			if e, ok := err.(*os.SyscallError); ok && e.Err == syscall.ECHILD {
+				return nil
+			}
 			return fmt.Errorf("SPExecuter: Process.Kill error: %#v", err)
 	}
 
@@ -152,6 +156,9 @@ func (e *SPExecuter) workerKill(worker *process) error {
 		case syscall.ECHILD:
 			return nil
 		default:
+			if e, ok := err.(*os.SyscallError); ok && e.Err == syscall.ECHILD {
+				return nil
+			}
 			return fmt.Errorf("SPExecuter: Process.Wait error: %#v", err)
 	}
 
@@ -176,13 +183,17 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 		switch {
 			case err == nil && wpid == 0:
 				// Do nothing
-			case err == nil && status.Exited() || err == syscall.ECHILD:
+			case err == nil && status.Exited():
 				worker.Cmd = nil
 			case err != nil:
-				log.Printf("SPExecuter: syscall.Wait4 error: %#v", err)
-				err = e.workerKill(worker)
-				if err != nil {
-					log.Printf("%s", err)
+				if err2, ok := err.(*os.SyscallError); ok && err2.Err == syscall.ECHILD {
+					worker.Cmd = nil
+				} else {
+					log.Printf("SPExecuter: syscall.Wait4 error: %#v", err)
+					err = e.workerKill(worker)
+					if err != nil {
+						log.Printf("%s", err)
+					}
 				}
 			default:
 				// Do nothing
