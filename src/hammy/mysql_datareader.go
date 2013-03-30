@@ -46,7 +46,7 @@ func (dr *MySQLDataReader) Read(hostKey string, itemKey string, from uint64, to 
 		tName = dr.tableName
 	}
 
-	sqlq := fmt.Sprintf("SELECT TO_UNIXTIME(`timestamp`), `value` FROM `%s` WHERE `host` = ? AND `item` = ? AND `timestamp` >= FROM_UNIXTIME(?) AND `timestamp` <= FROM_UNIXTIME(?) ORDER BY `timestamp`", tName)
+	sqlq := fmt.Sprintf("SELECT UNIX_TIMESTAMP(`timestamp`), `value` FROM `%s` WHERE `host` = ? AND `item` = ? AND `timestamp` >= FROM_UNIXTIME(?) AND `timestamp` <= FROM_UNIXTIME(?) ORDER BY `timestamp`", tName)
 	rows, err := dr.db.Query(sqlq, hostKey, itemKey, from, to)
 	if err != nil {
 		return
