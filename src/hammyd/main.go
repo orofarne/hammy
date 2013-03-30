@@ -126,6 +126,6 @@ func main() {
 
 	log.Printf("done.")
 	log.Printf("Starting HTTP interface...")
-	err = hammy.StartHttp(&rh, cfg)
+	err = hammy.StartHttp(&rh, cfg, "incomingHttp")
 	log.Fatal(err)
 }

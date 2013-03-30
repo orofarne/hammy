@@ -28,7 +28,7 @@ func TestHttpInterface(t *testing.T) {
 	SetConfigDefaults(&cfg)
 	rh := new(RequestHandlerTestImpl)
 
-	go StartHttp(rh, cfg)
+	go StartHttp(rh, cfg, "testHttpServerInstance")
 	time.Sleep(100 * time.Millisecond)
 
 	httpAddr := "http://" + cfg.IncomingHttp.Addr + "/"

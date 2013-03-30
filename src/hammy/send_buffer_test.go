@@ -2,7 +2,7 @@ package hammy
 
 import (
 	"testing"
-	"fmt"
+	//"fmt"
 	"time"
 	"encoding/json"
 )
@@ -62,7 +62,7 @@ func TestSendBufferSimple(t *testing.T) {
 	sb.Push(&data1)
 	sb.Push(&data2)
 
-	fmt.Printf("[send_buffer_test.go] Sleeping...\n")
+	//fmt.Printf("[send_buffer_test.go] Sleeping...\n")
 
 	time.Sleep(200 * time.Millisecond)
 

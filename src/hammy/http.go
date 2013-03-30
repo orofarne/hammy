@@ -4,49 +4,42 @@ import (
 	"fmt"
 	"log"
 	"time"
-	"expvar"
 	"net/http"
 	"encoding/json"
 	"github.com/ugorji/go-msgpack"
 )
 
-// Golbal http request counter
-var httpServerCounter *expvar.Int
-// 200-code responses
-var httpServer200Couner *expvar.Int
-// 400-code responses
-var httpServer400Couner *expvar.Int
-// 500-code responses
-var httpServer500Couner *expvar.Int
-// Global timer
-var httpServerTime *expvar.Float
-
-func init() {
-	httpServerCounter = expvar.NewInt("HttpServerCounter")
-	httpServer200Couner = expvar.NewInt("HttpServer200Couner")
-	httpServer400Couner = expvar.NewInt("HttpServer400Couner")
-	httpServer500Couner = expvar.NewInt("HttpServer500Couner")
-	httpServerTime = expvar.NewFloat("HttpServerTime")
-}
-
 // Http server object
+// InitMetric must be called before use
 type HttpServer struct{
 	// Request handler  object
 	RHandler RequestHandler
+	// Metrics
+	ms *MetricSet
+	rTimer *TimerMetric
+	counter200, counter400, counter500 *CounterMetric
+}
+
+// Initialize metric objects
+func (h *HttpServer) InitMetrics(metricsNamespace string) {
+	h.ms = NewMetricSet(metricsNamespace, 30*time.Second)
+	h.rTimer = h.ms.NewTimer("requests")
+	h.counter200 = h.ms.NewCounter("2xx")
+	h.counter400 = h.ms.NewCounter("4xx")
+	h.counter500 = h.ms.NewCounter("5xx")
 }
 
 // Request handler
 func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// statistics
-	httpServerCounter.Add(1)
 	before := time.Now()
 	defer func() {
-		httpServerTime.Add(time.Since(before).Seconds())
+		h.rTimer.Add(time.Since(before))
 	}()
 
 	if r.Method != "POST" {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		httpServer400Couner.Add(1)
+		h.counter400.Add(1)
 		return
 	}
 
@@ -78,7 +71,7 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		default:
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			fmt.Fprintf(w, "Unsupported Content-Type\n")
-			httpServer400Couner.Add(1)
+			h.counter400.Add(1)
 			return
 	}
 
@@ -87,7 +80,7 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		fmt.Fprintf(w, "%v\n", err);
-		httpServer400Couner.Add(1)
+		h.counter400.Add(1)
 		return
 	}
 
@@ -108,18 +101,20 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		fmt.Fprintf(w, "%v\n", err);
 		log.Printf("Internal Server Error: %v", err)
-		httpServer500Couner.Add(1)
+		h.counter500.Add(1)
 		return
 	}
 
-	httpServer200Couner.Add(1)
+	h.counter200.Add(1)
 }
 
 // Start http interface and lock goroutine untill fatal error
-func StartHttp(rh RequestHandler, cfg Config) error {
+func StartHttp(rh RequestHandler, cfg Config, metricsNamespace string) error {
 	h := &HttpServer{
 		RHandler: rh,
 	}
+
+	h.InitMetrics(metricsNamespace)
 
 	// Setup server
 	s := &http.Server{
