@@ -14,15 +14,29 @@ type SendBufferImpl struct {
 	// Timeout between sends
 	sleepTime time.Duration
 	rHandler RequestHandler
+
+	//Metics
+	ms *MetricSet
+	mPushes *TimerMetric
+	mSendedValues *CounterMetric
+	mSend *TimerMetric
+	mErrors *CounterMetric
 }
 
 // Creates and initialize new SendBuffer
-func NewSendBufferImpl(rh RequestHandler, cfg Config) (sb *SendBufferImpl) {
+func NewSendBufferImpl(rh RequestHandler, cfg Config, metricsNamespace string) (sb *SendBufferImpl) {
 	sb = new(SendBufferImpl)
 	sb.dataChan = make(chan *IncomingData)
 	sb.data = list.New()
 	sb.sleepTime = time.Duration(1000 * cfg.SendBuffer.SleepTime) * time.Millisecond
 	sb.rHandler = rh
+
+	sb.ms = NewMetricSet(metricsNamespace, 30*time.Second)
+	sb.mPushes = sb.ms.NewTimer("pushes")
+	sb.mSendedValues = sb.ms.NewCounter("sended_values")
+	sb.mSend = sb.ms.NewTimer("send")
+	sb.mErrors = sb.ms.NewCounter("errors")
+
 	return
 }
 
@@ -43,7 +57,11 @@ func (sb *SendBufferImpl) Listen() {
 
 // Enqueue data for reprocessing
 func (sb *SendBufferImpl) Push(data *IncomingData) {
+	τ := sb.mPushes.NewObservation()
+
 	sb.dataChan <- data
+
+	τ.End()
 }
 
 // Process detached data buffer
@@ -51,6 +69,12 @@ func (sb *SendBufferImpl) send(data *list.List) {
 	if data.Len() == 0 {
 		return
 	}
+
+	// Statistics
+	τ := sb.mSend.NewObservation()
+	defer func() { τ.End() } ()
+	var sended_values uint64
+	defer func() { sb.mSendedValues.Add(sended_values) } ()
 
 	// 1) Merge list
 	mData := make(IncomingData)
@@ -67,9 +91,11 @@ func (sb *SendBufferImpl) send(data *list.List) {
 						newIArr := make([]IncomingValueData, len(v) + len(iArr))
 						for i, vE := range iArr {
 							newIArr[i] = vE
+							sended_values++ // Statistics
 						}
 						for j, vE := range v {
 							newIArr[len(iArr) + j] = vE
+							sended_values++ // Statistics
 						}
 						mV[k] = newIArr
 					} else {
@@ -86,6 +112,8 @@ func (sb *SendBufferImpl) send(data *list.List) {
 	errs := sb.rHandler.Handle(mData)
 
 	if len(errs) > 0 {
+		sb.mErrors.Add(uint64(len(errs))) // Statistics
+
 		// FIXME
 		errs_str := make(map[string]string)
 		for k, v := range errs {

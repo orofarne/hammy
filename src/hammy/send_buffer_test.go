@@ -11,7 +11,7 @@ func TestSendBufferSimple(t *testing.T) {
 	rh := RequestHandlerTestImpl{}
 	var cfg Config
 	cfg.SendBuffer.SleepTime = 0.1
-	sb := NewSendBufferImpl(&rh, cfg)
+	sb := NewSendBufferImpl(&rh, cfg, "send_buffer_impl_test_instance")
 
 	json1 := `{
 		"host1": {

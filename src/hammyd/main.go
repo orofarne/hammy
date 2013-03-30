@@ -104,7 +104,7 @@ func main() {
 		CBProcessor: &cbp,
 	}
 
-	sb := hammy.NewSendBufferImpl(&rh, cfg)
+	sb := hammy.NewSendBufferImpl(&rh, cfg, "send_buffer")
 	go sb.Listen()
 	cbp.SBuffer = sb
 
