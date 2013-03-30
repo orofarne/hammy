@@ -16,30 +16,28 @@ type HttpServer struct{
 	RHandler RequestHandler
 	// Metrics
 	ms *MetricSet
-	rTimer *TimerMetric
-	counter200, counter400, counter500 *CounterMetric
+	mReqTimer *TimerMetric
+	mCounter200, mCounter400, mCounter500 *CounterMetric
 }
 
 // Initialize metric objects
 func (h *HttpServer) InitMetrics(metricsNamespace string) {
 	h.ms = NewMetricSet(metricsNamespace, 30*time.Second)
-	h.rTimer = h.ms.NewTimer("requests")
-	h.counter200 = h.ms.NewCounter("2xx")
-	h.counter400 = h.ms.NewCounter("4xx")
-	h.counter500 = h.ms.NewCounter("5xx")
+	h.mReqTimer = h.ms.NewTimer("requests")
+	h.mCounter200 = h.ms.NewCounter("2xx")
+	h.mCounter400 = h.ms.NewCounter("4xx")
+	h.mCounter500 = h.ms.NewCounter("5xx")
 }
 
 // Request handler
 func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// statistics
-	before := time.Now()
-	defer func() {
-		h.rTimer.Add(time.Since(before))
-	}()
+	τ := h.mReqTimer.NewObservation()
+	defer func() { τ.End() } ()
 
 	if r.Method != "POST" {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		h.counter400.Add(1)
+		h.mCounter400.Add(1)
 		return
 	}
 
@@ -71,7 +69,7 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		default:
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			fmt.Fprintf(w, "Unsupported Content-Type\n")
-			h.counter400.Add(1)
+			h.mCounter400.Add(1)
 			return
 	}
 
@@ -80,7 +78,7 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		fmt.Fprintf(w, "%v\n", err);
-		h.counter400.Add(1)
+		h.mCounter400.Add(1)
 		return
 	}
 
@@ -101,11 +99,11 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		fmt.Fprintf(w, "%v\n", err);
 		log.Printf("Internal Server Error: %v", err)
-		h.counter500.Add(1)
+		h.mCounter500.Add(1)
 		return
 	}
 
-	h.counter200.Add(1)
+	h.mCounter200.Add(1)
 }
 
 // Start http interface and lock goroutine untill fatal error

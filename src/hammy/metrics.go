@@ -176,10 +176,31 @@ func (ms *MetricSet) NewTimer(name string) *TimerMetric {
 	return m
 }
 
-func (m *TimerMetric)Add(τ time.Duration) {
+func (m *TimerMetric) Add(τ time.Duration) {
 	m.c <- metric{
 		Type: METRIC_TIMER,
 		Name: m.name,
 		Value: τ,
+	}
+}
+
+type TimerMetricObservation struct {
+	m *TimerMetric
+	beginTime time.Time
+}
+
+func (m *TimerMetric) NewObservation() *TimerMetricObservation {
+	τ := new(TimerMetricObservation)
+	τ.m = m
+	τ.beginTime = time.Now()
+	return τ
+}
+
+func (τ *TimerMetricObservation) End() {
+	Δ := time.Since(τ.beginTime)
+	τ.m.c <- metric{
+		Type: METRIC_TIMER,
+		Name: τ.m.name,
+		Value: Δ,
 	}
 }

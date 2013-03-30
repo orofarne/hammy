@@ -152,7 +152,7 @@ func TestSPExecuterSimple(t *testing.T) {
 	cfg.Workers.MaxIter = 100
 	cfg.Workers.Timeout = 5
 
-	e := NewSPExecuter(cfg)
+	e := NewSPExecuter(cfg, "test_spexecutrer_instance_1")
 
 	key := "test1"
 	trigger := `sss@^&%GGGkll""''`
@@ -194,7 +194,7 @@ func TestSPExecuterKills(t *testing.T) {
 	cfg.Workers.MaxIter = 3
 	cfg.Workers.Timeout = 5
 
-	e := NewSPExecuter(cfg)
+	e := NewSPExecuter(cfg, "test_spexecutrer_instance_2")
 
 	prevPid := ""
 	pidChanged := false
@@ -254,7 +254,7 @@ func TestSPExecuterDeads(t *testing.T) {
 	cfg.Workers.MaxIter = 100
 	cfg.Workers.Timeout = 100
 
-	e := NewSPExecuter(cfg)
+	e := NewSPExecuter(cfg, "test_spexecutrer_instance_3")
 
 	prevPid := ""
 	pidChanged := false
@@ -315,7 +315,7 @@ func TestSPExecuterTimeout(t *testing.T) {
 	cfg.Workers.MaxIter = 100
 	cfg.Workers.Timeout = 1
 
-	e := NewSPExecuter(cfg)
+	e := NewSPExecuter(cfg, "test_spexecutrer_instance_4")
 
 	key := "test1"
 	trigger := `sss@^&%GGGkll""''`

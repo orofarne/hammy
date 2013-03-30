@@ -93,7 +93,7 @@ func main() {
 		}
 	}
 
-	e := hammy.NewSPExecuter(cfg)
+	e := hammy.NewSPExecuter(cfg, "spexecuter")
 
 	cbp := hammy.CmdBufferProcessorImpl{}
 
@@ -126,6 +126,6 @@ func main() {
 
 	log.Printf("done.")
 	log.Printf("Starting HTTP interface...")
-	err = hammy.StartHttp(&rh, cfg, "incomingHttp")
+	err = hammy.StartHttp(&rh, cfg, "incoming_http")
 	log.Fatal(err)
 }

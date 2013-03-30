@@ -35,28 +35,37 @@ type WorkerProcessOutput struct {
 
 // Executer implementation for subprocesses with MessagePack-based RPC
 type SPExecuter struct {
-	CmdLine string
-	MaxIter uint
-	Workers chan *process
-	Timeout time.Duration
+	cmdLine string
+	maxIter uint
+	workers chan *process
+	timeout time.Duration
+
+	//Metrics
+	ms *MetricSet
+	mExecTimer *TimerMetric
+	mWorkerWaitTimer *TimerMetric
 }
 
 // Create new instance of SPExecutor
 // per process
-func NewSPExecuter(cfg Config) *SPExecuter {
+func NewSPExecuter(cfg Config, metricNamespace string) *SPExecuter {
 	if cfg.Workers.PoolSize < 1 || cfg.Workers.CmdLine == "" {
 		panic("Invalid argument")
 	}
 
 	e := new(SPExecuter)
-	e.CmdLine = cfg.Workers.CmdLine
-	e.MaxIter = cfg.Workers.MaxIter
-	e.Workers = make(chan *process, cfg.Workers.PoolSize)
-	e.Timeout = time.Duration(cfg.Workers.Timeout) * time.Second
+	e.cmdLine = cfg.Workers.CmdLine
+	e.maxIter = cfg.Workers.MaxIter
+	e.workers = make(chan *process, cfg.Workers.PoolSize)
+	e.timeout = time.Duration(cfg.Workers.Timeout) * time.Second
 
 	for i := uint(0); i < cfg.Workers.PoolSize; i++ {
-		e.Workers <- &process{}
+		e.workers <- &process{}
 	}
+
+	e.ms = NewMetricSet(metricNamespace, 30 * time.Second)
+	e.mExecTimer = e.ms.NewTimer("exec")
+	e.mWorkerWaitTimer = e.ms.NewTimer("worker_wait")
 
 	return e
 }
@@ -77,6 +86,10 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 	if err != nil {
 		return
 	}
+
+	//Setup statistics
+	τ := e.mExecTimer.NewObservation()
+	defer func() { τ.End() } ()
 
 	// Set up timeout
 	cEnd := make(chan int)
@@ -118,7 +131,7 @@ func (e *SPExecuter) workerTimeout(worker *process, cEnd chan int) {
 	case <-cEnd:
 		cEnd <- 1
 		return
-	case <-time.After(e.Timeout):
+	case <-time.After(e.timeout):
 		err := e.workerKill(worker)
 		if err != nil {
 			log.Printf("%s", err)
@@ -171,7 +184,11 @@ func (e *SPExecuter) workerKill(worker *process) error {
 
 // Fetch worker (may be wait for free worker)
 func (e *SPExecuter) getWorker() (worker *process, err error) {
-	worker = <- e.Workers
+	//Statistics
+	τ := e.mWorkerWaitTimer.NewObservation()
+	defer func() { τ.End() } ()
+
+	worker = <- e.workers
 
 	if worker == nil {
 		panic("nil worker")
@@ -207,7 +224,7 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 	if worker.Cmd == nil {
 		// Creating new subprocess
 		worker.Count = 0
-		worker.Cmd = exec.Command(e.CmdLine)
+		worker.Cmd = exec.Command(e.cmdLine)
 		worker.Stdin, err = worker.Cmd.StdinPipe()
 		if err != nil {
 			worker.Cmd = nil
@@ -235,7 +252,7 @@ func (e *SPExecuter) freeWorker(worker *process) {
 	worker.Count++
 
 	// Check iteration count
-	if worker.Count >= e.MaxIter {
+	if worker.Count >= e.maxIter {
 		err := e.workerKill(worker)
 		if err != nil {
 			log.Printf("%s", err)
@@ -243,5 +260,5 @@ func (e *SPExecuter) freeWorker(worker *process) {
 	}
 
 	// Return worker to the queue
-	e.Workers <- worker
+	e.workers <- worker
 }
