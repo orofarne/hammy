@@ -137,9 +137,15 @@ func (ms *MetricSet) doResults(Δ time.Duration) {
 				v.Value = uint64(0)
 			case METRIC_TIMER:
 				tState := v.Value.(metricTimerState)
-				τ := (float64(tState.Sum) / float64(tState.Counter)) / float64(1000000000)
+				var τ float64
+				if tState.Counter != 0 {
+					τ = (float64(tState.Sum) / float64(tState.Counter)) / float64(1000000000)
+				} else {
+					τ = 0
+				}
 				ms.results[k + "#rps"] = float64(tState.Counter) / Δ.Seconds()
 				ms.results[k + "_avgtime#s"] = τ
+				v.Value = metricTimerState{}
 		}
 	}
 }
