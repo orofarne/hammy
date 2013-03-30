@@ -17,7 +17,7 @@ type SendBufferImpl struct {
 
 	//Metics
 	ms *MetricSet
-	mPushes *TimerMetric
+	mPushes *CounterMetric
 	mSendedValues *CounterMetric
 	mSend *TimerMetric
 	mErrors *CounterMetric
@@ -32,7 +32,7 @@ func NewSendBufferImpl(rh RequestHandler, cfg Config, metricsNamespace string) (
 	sb.rHandler = rh
 
 	sb.ms = NewMetricSet(metricsNamespace, 30*time.Second)
-	sb.mPushes = sb.ms.NewTimer("pushes")
+	sb.mPushes = sb.ms.NewCounter("pushes")
 	sb.mSendedValues = sb.ms.NewCounter("sended_values")
 	sb.mSend = sb.ms.NewTimer("send")
 	sb.mErrors = sb.ms.NewCounter("errors")
@@ -57,11 +57,8 @@ func (sb *SendBufferImpl) Listen() {
 
 // Enqueue data for reprocessing
 func (sb *SendBufferImpl) Push(data *IncomingData) {
-	τ := sb.mPushes.NewObservation()
-
 	sb.dataChan <- data
-
-	τ.End()
+	sb.mPushes.Add(1)
 }
 
 // Process detached data buffer

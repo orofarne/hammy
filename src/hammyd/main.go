@@ -103,6 +103,7 @@ func main() {
 		Exec: e,
 		CBProcessor: &cbp,
 	}
+	rh.InitMetrics("request_handler")
 
 	sb := hammy.NewSendBufferImpl(&rh, cfg, "send_buffer")
 	go sb.Listen()

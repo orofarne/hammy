@@ -100,6 +100,8 @@ func TestRequestImplSimple(t *testing.T) {
 		CBProcessor: &CmdBufferProcessorTestImpl{},
 	}
 
+	rh.InitMetrics("request_impl_test_instance")
+
 	var data IncomingData
 	jsonTestData := `{
 		"host1": {

@@ -5,17 +5,10 @@ import (
 	"time"
 	"fmt"
 	"reflect"
-	"expvar"
 )
 
-// Global request counter
-var requestHandlerImplCounter *expvar.Int
-
-func init() {
-	requestHandlerImplCounter = expvar.NewInt("RequestHandlerImplCounter")
-}
-
 // Main data processor implementation
+// You must call InitMetrics before use new object
 type RequestHandlerImpl struct {
 	// Interface for triggers retriving
 	TGetter TriggersGetter
@@ -25,6 +18,18 @@ type RequestHandlerImpl struct {
 	Exec Executer
 	// Interface for command commiter
 	CBProcessor CmdBufferProcessor
+
+	// Metrics
+	ms *MetricSet
+	mHandle *TimerMetric
+	mCollisions *CounterMetric
+}
+
+// Initializes statistical metrics
+func (rh *RequestHandlerImpl) InitMetrics(metricsNamespace string) {
+	rh.ms = NewMetricSet(metricsNamespace, 30*time.Second)
+	rh.mHandle = rh.ms.NewTimer("handle")
+	rh.mCollisions = rh.ms.NewCounter("collisions")
 }
 
 // Internal struct for processing result
@@ -37,13 +42,14 @@ func (rh *RequestHandlerImpl) Handle(data IncomingData) (errs map[string]error) 
 	// Allocate return value
 	errs = make(map[string]error)
 
-	// Is in possible?... May be...
+	// Is it possible?... May be...
 	if (len(data) == 0) {
 		return
 	}
 
-	// Update global statistcs
-	requestHandlerImplCounter.Add(1)
+	// Statistics
+	τ := rh.mHandle.NewObservation()
+	defer func() { τ.End() } ()
 
 	// Step 1: Loading triggers
 	keys := make([]string, len(data))
@@ -141,6 +147,9 @@ func (rh *RequestHandlerImpl) processTrigger(
 			// Starting loop of retries
 			rand.Seed( time.Now().UTC().UnixNano())
 			for {
+				// Statistics
+				rh.mCollisions.Add(1)
+
 				// random sleep
 				t := rand.Intn(100)
 				if t > 50 {
