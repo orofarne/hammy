@@ -73,10 +73,10 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 
 	// Fetch worker (may be wait for free worker)
 	worker, err := e.getWorker()
+	defer e.freeWorker(worker)
 	if err != nil {
 		return
 	}
-	defer e.freeWorker(worker)
 
 	// Set up timeout
 	cEnd := make(chan int)
@@ -210,15 +210,18 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 		worker.Cmd = exec.Command(e.CmdLine)
 		worker.Stdin, err = worker.Cmd.StdinPipe()
 		if err != nil {
+			worker.Cmd = nil
 			return
 		}
 		worker.Stdout, err = worker.Cmd.StdoutPipe()
 		if err != nil {
+			worker.Cmd = nil
 			return
 		}
 		worker.Cmd.Stderr = &worker.Stderr
 		err = worker.Start()
 		if err != nil {
+			worker.Cmd = nil
 			return
 		}
 	}
