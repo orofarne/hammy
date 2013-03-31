@@ -71,7 +71,6 @@ func (sb *SendBufferImpl) send(data *list.List) {
 	τ := sb.mSend.NewObservation()
 	defer func() { τ.End() } ()
 	var sended_values uint64
-	defer func() { sb.mSendedValues.Add(sended_values) } ()
 
 	// 1) Merge list
 	mData := make(IncomingData)
@@ -104,6 +103,8 @@ func (sb *SendBufferImpl) send(data *list.List) {
 			}
 		}
 	}
+
+	sb.mSendedValues.Add(sended_values) // Statistics
 
 	// 2) Process merged data
 	errs := sb.rHandler.Handle(mData)

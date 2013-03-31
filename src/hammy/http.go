@@ -17,6 +17,7 @@ type HttpServer struct{
 	// Metrics
 	ms *MetricSet
 	mReqTimer *TimerMetric
+	mReceivedValues *CounterMetric
 	mCounter200, mCounter400, mCounter500 *CounterMetric
 }
 
@@ -24,9 +25,22 @@ type HttpServer struct{
 func (h *HttpServer) InitMetrics(metricsNamespace string) {
 	h.ms = NewMetricSet(metricsNamespace, 30*time.Second)
 	h.mReqTimer = h.ms.NewTimer("requests")
+	h.mReceivedValues = h.ms.NewCounter("received_values")
 	h.mCounter200 = h.ms.NewCounter("2xx")
 	h.mCounter400 = h.ms.NewCounter("4xx")
 	h.mCounter500 = h.ms.NewCounter("5xx")
+}
+
+func (h *HttpServer) reqStatistics(req *IncomingMessage) {
+	var values_received uint64
+
+	for _, hD := range req.Data {
+		for _, v := range hD {
+			values_received += uint64(len(v))
+		}
+	}
+
+	h.mReceivedValues.Add(values_received)
 }
 
 // Request handler
@@ -81,6 +95,8 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.mCounter400.Add(1)
 		return
 	}
+
+	h.reqStatistics(&req) // Statistics
 
 	errs := h.RHandler.Handle(req.Data)
 	errs_str := make(map[string]string)
