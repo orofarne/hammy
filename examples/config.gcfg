@@ -5,9 +5,9 @@ Addr = "localhost:4000"
 Addr = "localhost:4001"
 
 [Workers]
-PoolSize = 5
+PoolSize = 1
 MaxIter = 100
-CmdLine = "worker/worker.rb"
+CmdLine = "worker/build/worker"
 
 [MySQLTriggers]
 Active = true
