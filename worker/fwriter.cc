@@ -8,7 +8,7 @@
 namespace hammy {
 
 FWriter::FWriter(int fd)
-	: m_fp( fdopen(fd, "wb") )
+	: m_fp( fdopen(fd, "w") )
 {
 }
 

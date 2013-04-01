@@ -1,11 +1,13 @@
 #include "worker.hh"
 #include "asserts.hh"
 #include "converters.hh"
+#include "types.hh"
 
 #include <errno.h>
 #include <stdint.h>
 
 #include <iostream>
+#include <stdexcept>
 
 namespace hammy {
 
@@ -25,6 +27,8 @@ void Worker::socket_readable() {
 	m_unpack.reserve_buffer(1024);
 
 	ssize_t count = read(m_in_sock, m_unpack.buffer(), m_unpack.buffer_capacity());
+
+	std::cerr << count << std::endl; // FIXME
 
 	if(count <= 0) {
 		if(count == 0) {
@@ -82,12 +86,24 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 	std::string trigger(Trigger->via.raw.ptr, Trigger->via.raw.size);
 
 	int r = m_evl.eval(trigger.c_str());
-	ASSERTPP(r == 0);
+	if (r != 0)
+		throw std::runtime_error(m_evl.last_error());
 
 	m_pack.pack_map(2);
+
 	// CmdBuffer
+	CmdBuf &cmdb = m_evl.get_cmdbuf();
 	m_pack.pack(std::string("CmdBuffer"));
-	m_pack.pack_nil();
+	m_pack.pack_map(cmdb.size());
+	for(CmdBuf::const_iterator it = cmdb.begin(); it != cmdb.end(); ++it) {
+		m_pack.pack(it->cmd);
+		m_pack.pack_map(it->opts.size());
+		for(Hash::const_iterator jt = it->opts.begin(); jt != it->opts.end(); ++jt) {
+			m_pack.pack(jt->first);
+			pack_jsval(&m_pack, jt->second);
+		}
+	}
+
 	// State
 	m_pack.pack(std::string("State"));
 	m_pack.pack_nil();
