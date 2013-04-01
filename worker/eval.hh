@@ -18,7 +18,7 @@ class MozJSEval {
 
 		int eval(const char *script);
 		std::string last_error();
-		CmdBuf *get_cmdbuf();
+		CmdBuf &get_cmdbuf();
 
 	private:
 		// The error reporter callback.

@@ -79,8 +79,8 @@ int MozJSEval::eval(const char *script) {
 	return 0;
 }
 
-CmdBuf *MozJSEval::get_cmdbuf() {
-	return &m_cmdbuf;
+CmdBuf &MozJSEval::get_cmdbuf() {
+	return m_cmdbuf;
 }
 
 // The error reporter callback.
@@ -113,11 +113,25 @@ JSBool MozJSEval::cmd(JSContext *cx, uintN argc, jsval *vp) {
 
 	name = JS_EncodeString(cx, name_raw);
 
-	if(opts_raw != NULL) {
-		js::Value opts;
-		opts.setObject(*opts_raw);
+	m_instance->m_cmdbuf.resize(m_instance->m_cmdbuf.size() + 1);
+	Cmd &cmd = m_instance->m_cmdbuf.back();
+	cmd.cmd = name;
 
-		// TODO
+	if(opts_raw != NULL) {
+		JSIdArray *ids = JS_Enumerate(cx, opts_raw);
+		for (jsint i = 0; i < ids->length; i++) {
+			jsid id = ids->vector[i];
+			jsval id_val;
+			assert(JS_TRUE == JS_IdToValue(cx, id, &id_val));
+			JSString *id_raw = JS_ValueToString(cx , id_val);
+			char *id_str = JS_EncodeString(cx, id_raw);
+			jsval val_val;
+			assert(JS_TRUE == JS_GetPropertyById(cx, opts_raw, id, &val_val));
+
+			cmd.opts[id_str] = js::Valueify(val_val);
+
+			JS_free(cx, id_str);
+		}
 	}
 
 	JS_free(cx, name);

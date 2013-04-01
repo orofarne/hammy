@@ -37,8 +37,17 @@ TEST(MozJsTest, Cmd) {
 	const char *script = "cmd('log');\n";
 	EXPECT_EQ(0, eval.eval(script));
 	EXPECT_EQ("", eval.last_error());
+	hammy::CmdBuf &cmdb = eval.get_cmdbuf();
+	ASSERT_EQ(1, cmdb.size());
+	EXPECT_EQ("log", cmdb[0].cmd);
+	EXPECT_EQ(0, cmdb[0].opts.size());
 
 	const char *script2 = "cmd('log', {'message': 'hello'});\n";
 	EXPECT_EQ(0, eval.eval(script2));
 	EXPECT_EQ("", eval.last_error());
+	hammy::CmdBuf &cmdb2 = eval.get_cmdbuf();
+	ASSERT_EQ(1, cmdb2.size());
+	EXPECT_EQ("log", cmdb2[0].cmd);
+	ASSERT_EQ(1, cmdb2[0].opts.size());
+	EXPECT_TRUE(cmdb2[0].opts["message"].isString());
 }
