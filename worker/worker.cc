@@ -1,6 +1,8 @@
 #include "worker.hh"
+#include "asserts.hh"
 
 #include <errno.h>
+#include <stdint.h>
 
 #include <iostream>
 
@@ -12,7 +14,7 @@ Worker::Worker(int in_sock, int out_sock)
 	, fw(m_out_sock)
 	, m_pack(fw)
 {
-	m_evl.init();
+	ASSERTPP(m_evl.init() == 0);
 }
 
 Worker::~Worker() {
@@ -51,7 +53,34 @@ void Worker::socket_readable() {
 }
 
 void Worker::process_message(msgpack::object msg, auto_zone& life) {
-	std::cerr << "message reached: " << msg << std::endl;
+	msgpack::object *Key = NULL;
+	msgpack::object *Trigger = NULL;
+	msgpack::object *State = NULL;
+	msgpack::object *IData = NULL;
+
+	ASSERTPP(msg.type == msgpack::type::MAP);
+	for(uint32_t i = 0; i < msg.via.map.size; ++i) {
+		msgpack::object_kv &kv = msg.via.map.ptr[i];
+		ASSERTPP(kv.key.type == msgpack::type::RAW);
+
+		if(0 == strncmp(kv.key.via.raw.ptr, "Key", 3)) {
+			ASSERTPP(kv.val.type == msgpack::type::RAW);
+			Key = &kv.val;
+		} else if(0 == strncmp(kv.key.via.raw.ptr, "Trigger", 7)) {
+			ASSERTPP(kv.val.type == msgpack::type::RAW);
+			Trigger = &kv.val;
+		} else if (0 == strncmp(kv.key.via.raw.ptr, "State", 5)) {
+			State = &kv.val;
+		} else if (0 == strncmp(kv.key.via.raw.ptr, "IData", 5)) {
+			IData = &kv.val;
+		}
+	}
+	ASSERTPP(Key && Trigger && State && IData);
+
+	std::string script(Trigger->via.raw.ptr, Trigger->via.raw.size);
+	std::cerr << script << std::endl;
+	int r = m_evl.eval(script.c_str());
+	ASSERTPP(r == 0);
 
 	m_pack.pack_map(2);
 	// CmdBuffer
