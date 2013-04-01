@@ -1,4 +1,7 @@
+#pragma once
+
 #include "fwriter.hh"
+#include "eval.hh"
 
 #include <msgpack.hpp>
 
@@ -23,6 +26,7 @@ class Worker {
 		msgpack::unpacker m_unpack;
 		FWriter fw;
 		msgpack::packer<FWriter> m_pack;
+		MozJSEval m_evl;
 };
 
 }

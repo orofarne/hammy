@@ -7,13 +7,23 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(MsgPack)
 find_package(MOZJS)
 
+include_directories(
+  ${MsgPack_INCLUDE_DIRS}
+  ${MOZJS_INCLUDE_DIR}
+)
+
 set(WORKER_SOURCES
   main.cc
   worker.hh
   worker.cc
   fwriter.hh
   fwriter.cc
+  eval.hh
+  eval.cc
 )
 
 add_executable(worker ${WORKER_SOURCES})
-target_link_libraries(worker ${MsgPack_LIBRARIES})
+target_link_libraries(worker
+  ${MsgPack_LIBRARIES}
+  ${MOZJS_LIBRARY}
+)

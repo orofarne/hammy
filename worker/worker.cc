@@ -12,6 +12,7 @@ Worker::Worker(int in_sock, int out_sock)
 	, fw(m_out_sock)
 	, m_pack(fw)
 {
+	m_evl.init();
 }
 
 Worker::~Worker() {
