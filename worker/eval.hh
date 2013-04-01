@@ -1,5 +1,7 @@
 #pragma once
 
+#include "types.hh"
+
 #include <string>
 #include <sstream>
 
@@ -16,10 +18,13 @@ class MozJSEval {
 
 		int eval(const char *script);
 		std::string last_error();
+		CmdBuf *get_cmdbuf();
 
 	private:
 		// The error reporter callback.
 		static void reportError(JSContext *cx, const char *message, JSErrorReport *report);
+
+		static JSBool cmd(JSContext *cx, uintN argc, jsval *vp);
 
 	private:
 		// JS variables.
@@ -27,11 +32,13 @@ class MozJSEval {
 		JSContext *m_cx;
 		JSObject *m_global;
 
+		std::ostringstream m_error;
+		CmdBuf m_cmdbuf;
+
 		// The class of the global object.
 		static JSClass m_global_class;
-
-		static std::ostringstream m_error;
-		static bool m_constructed;
+		static JSFunctionSpec m_global_functions[];
+		static MozJSEval *m_instance;
 };
 
 }

@@ -1,5 +1,6 @@
 #include "worker.hh"
 #include "asserts.hh"
+#include "converters.hh"
 
 #include <errno.h>
 #include <stdint.h>
@@ -77,9 +78,10 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 	}
 	ASSERTPP(Key && Trigger && State && IData);
 
-	std::string script(Trigger->via.raw.ptr, Trigger->via.raw.size);
-	std::cerr << script << std::endl;
-	int r = m_evl.eval(script.c_str());
+	std::string key(Key->via.raw.ptr, Key->via.raw.size);
+	std::string trigger(Trigger->via.raw.ptr, Trigger->via.raw.size);
+
+	int r = m_evl.eval(trigger.c_str());
 	ASSERTPP(r == 0);
 
 	m_pack.pack_map(2);

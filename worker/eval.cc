@@ -2,6 +2,7 @@
 #include "asserts.hh"
 
 #include <stdio.h>
+#include <assert.h>
 
 namespace hammy {
 
@@ -12,19 +13,23 @@ JSClass MozJSEval::m_global_class = {
 	JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-std::ostringstream MozJSEval::m_error;
-bool MozJSEval::m_constructed = false;
+JSFunctionSpec MozJSEval::m_global_functions[] = {
+	JS_FS("cmd",	MozJSEval::cmd,			2,	0),
+	JS_FS_END
+};
+
+MozJSEval *MozJSEval::m_instance = NULL;
 
 MozJSEval::MozJSEval() {
-	ASSERTPP(!m_constructed);
-	m_constructed = true;
+	ASSERTPP(m_instance == NULL);
+	m_instance = this;
 }
 
 MozJSEval::~MozJSEval() {
 	JS_DestroyContext(m_cx);
 	JS_DestroyRuntime(m_rt);
 	JS_ShutDown();
-	m_constructed = false;
+	m_instance = NULL;
 }
 
 int MozJSEval::init() {
@@ -50,6 +55,9 @@ int MozJSEval::init() {
 	if (!JS_InitStandardClasses(m_cx, m_global))
 		return 1;
 
+	if (!JS_DefineFunctions(m_cx, m_global, m_global_functions))
+		return 2;
+
 	return 0;
 }
 
@@ -60,6 +68,7 @@ int MozJSEval::eval(const char *script) {
 	const char *filename = "noname";
 	uintN lineno = 0;
 
+	m_cmdbuf.clear();
 	m_error.str( std::string() );
 	m_error.clear();
 
@@ -70,14 +79,51 @@ int MozJSEval::eval(const char *script) {
 	return 0;
 }
 
+CmdBuf *MozJSEval::get_cmdbuf() {
+	return &m_cmdbuf;
+}
+
 // The error reporter callback.
 void MozJSEval::reportError(JSContext *cx, const char *message, JSErrorReport *report) {
-	m_error << (report->filename ? report->filename : "<no filename=\"filename\">") << ':'
-		<< report->lineno << ": " << message << "\n";
+	m_instance->m_error
+		<< (report->filename ? report->filename : "<no filename=\"filename\">") << ':'
+		<< report->lineno << ": " << message << "\n"
+		;
 }
 
 std::string MozJSEval::last_error() {
 	return m_error.str();
+}
+
+/************************************************************************
+ *                           Worker API                                 *
+ ************************************************************************/
+
+JSBool MozJSEval::cmd(JSContext *cx, uintN argc, jsval *vp) {
+	if(argc == 0)
+		return JS_FALSE;
+
+	JSString* name_raw;
+	JSObject* opts_raw;
+
+	char *name;
+
+	if(!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S/o", &name_raw, &opts_raw))
+		return JS_FALSE;
+
+	name = JS_EncodeString(cx, name_raw);
+
+	if(opts_raw != NULL) {
+		js::Value opts;
+		opts.setObject(*opts_raw);
+
+		// TODO
+	}
+
+	JS_free(cx, name);
+
+	JS_SET_RVAL(cx, vp, JSVAL_VOID); // return undefined
+	return JS_TRUE;
 }
 
 }
