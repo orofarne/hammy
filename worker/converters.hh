@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include <stdexcept>
+#include <sstream>
 #include <limits>
 
 #include <js/jsapi.h>
@@ -117,8 +118,6 @@ void pack_jsval(JSContext *cx, P *packer, js::Value const &val) {
  */
 
 void unpack_jsval(JSContext *cx, js::Value &val, msgpack::object &obj) {
-	JSString *str;
-
 	switch(obj.type) {
 		case msgpack::type::NIL:
 			val.setNull();
@@ -140,11 +139,17 @@ void unpack_jsval(JSContext *cx, js::Value &val, msgpack::object &obj) {
 			val.setNumber(obj.via.dec);
 			break;
 		case msgpack::type::RAW:
-			str = JS_NewStringCopyN(cx, obj.via.raw.ptr, obj.via.raw.size);
-			val.setString(str);
+			{
+				JSString *str = JS_NewStringCopyN(cx, obj.via.raw.ptr, obj.via.raw.size);
+				val.setString(str);
+			}
 			break;
 		default:
-			throw std::runtime_error("Object as argument");
+			{
+				std::ostringstream msg;
+				msg << "Object as argument (type " << obj.type << ')';
+				throw std::runtime_error(msg.str());
+			}
 	}
 }
 

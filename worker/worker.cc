@@ -28,8 +28,6 @@ void Worker::socket_readable() {
 
 	ssize_t count = read(m_in_sock, m_unpack.buffer(), m_unpack.buffer_capacity());
 
-	std::cerr << count << std::endl; // FIXME
-
 	if(count <= 0) {
 		if(count == 0) {
 			throw std::runtime_error("connection closed");
@@ -132,14 +130,14 @@ void Worker::read_state(msgpack::object *obj) {
 		std::string key(kv.key.via.raw.ptr, kv.key.via.raw.size);
 		ASSERTPP(kv.val.type == msgpack::type::MAP);
 		StateElem elem;
-		for(uint32_t j = 0; i < kv.val.via.map.size; ++j) {
+		for(uint32_t j = 0; j < kv.val.via.map.size; ++j) {
 			msgpack::object_kv &kv2 = kv.val.via.map.ptr[j];
 			ASSERTPP(kv2.key.type == msgpack::type::RAW);
 			if(0 == strncmp(kv2.key.via.raw.ptr, "LastUpdate", 10)) {
 				ASSERTPP(kv2.val.type == msgpack::type::POSITIVE_INTEGER);
 				elem.LastUpdate = kv2.val.via.u64;
 			} else if(0 == strncmp(kv2.key.via.raw.ptr, "Value", 5)){
-				unpack_jsval(m_evl.context(), elem.Value, *obj);
+				unpack_jsval(m_evl.context(), elem.Value, kv2.val);
 			}
 		}
 		m_state[key] = elem;
