@@ -64,7 +64,7 @@ void Worker::run() {
 }
 
 void Worker::process_message(msgpack::object msg, auto_zone& life) {
-	msgpack::object *Key = NULL;
+	msgpack::object *Hostname = NULL;
 	msgpack::object *Trigger = NULL;
 	msgpack::object *State = NULL;
 	msgpack::object *IData = NULL;
@@ -74,9 +74,9 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 		msgpack::object_kv &kv = msg.via.map.ptr[i];
 		ASSERTPP(kv.key.type == msgpack::type::RAW);
 
-		if(0 == strncmp(kv.key.via.raw.ptr, "Key", 3)) {
+		if(0 == strncmp(kv.key.via.raw.ptr, "Hostname", 8)) {
 			ASSERTPP(kv.val.type == msgpack::type::RAW);
-			Key = &kv.val;
+			Hostname = &kv.val;
 		} else if(0 == strncmp(kv.key.via.raw.ptr, "Trigger", 7)) {
 			ASSERTPP(kv.val.type == msgpack::type::RAW);
 			Trigger = &kv.val;
@@ -86,9 +86,12 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 			IData = &kv.val;
 		}
 	}
-	ASSERTPP(Key && Trigger && State && IData);
+	ASSERTPP(Hostname && Trigger && State && IData);
 
-	std::string key(Key->via.raw.ptr, Key->via.raw.size);
+	ASSERTPP(0 == m_evl.set_hostname(Hostname->via.raw.ptr, Hostname->via.raw.size));
+
+	read_state();
+	m_evl.set_state(&m_state);
 
 	m_evl.compile(Trigger->via.raw.ptr, Trigger->via.raw.size);
 	m_evl.exec();
@@ -96,6 +99,15 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 	m_pack.pack_map(2);
 
 	// CmdBuffer
+	write_cmdbuf();
+
+	// State
+	write_state();
+
+	fw.flush();
+}
+
+void Worker::write_cmdbuf() {
 	CmdBuf &cmdb = m_evl.get_cmdbuf();
 	m_pack.pack(std::string("CmdBuffer"));
 	m_pack.pack_array(cmdb.size());
@@ -110,12 +122,15 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 			pack_jsval(&m_pack, jt->second);
 		}
 	}
+}
 
-	// State
+void Worker::read_state() {
+
+}
+
+void Worker::write_state() {
 	m_pack.pack(std::string("State"));
 	m_pack.pack_nil();
-
-	fw.flush();
 }
 
 }

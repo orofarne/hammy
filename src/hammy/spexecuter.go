@@ -22,7 +22,7 @@ type process struct {
 }
 
 type WorkerProcessInput struct {
-	Key string
+	Hostname string
 	Trigger string
 	State *State
 	IData IncomingHostData
@@ -97,7 +97,7 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 
 	// marshal and send args
 	pInput := WorkerProcessInput{
-		Key: key,
+		Hostname: key,
 		Trigger: trigger,
 		State: state,
 		IData: data,

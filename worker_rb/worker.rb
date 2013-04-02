@@ -87,7 +87,7 @@ u.each do |obj|
 	res = {}
 	trigger = obj['Trigger']
 	if not trigger.empty? then
-		e = EvalEnv.new obj['State'], obj['Key']
+		e = EvalEnv.new obj['State'], obj['Hostname']
 		obj['IData'].each { |k, v|
 			e.eval(trigger, k, v)
 		}

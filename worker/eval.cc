@@ -56,9 +56,20 @@ int MozJSEval::init() {
 		return 1;
 
 	if (!JS_DefineFunctions(m_cx, m_global, m_global_functions))
-		return 2;
+		return 1;
 
 	return 0;
+}
+
+int MozJSEval::set_hostname(const char *name, size_t len) {
+	JSString *str = JS_NewStringCopyN(m_cx, name , len);
+	if (!JS_DefineProperty(m_cx, m_global, "host", STRING_TO_JSVAL(str), NULL, NULL, JSPROP_READONLY))
+		return 1;
+	return 0;
+}
+
+void MozJSEval::set_state(State *state) {
+	m_state = state;
 }
 
 int MozJSEval::compile(const char *script, size_t len) {
@@ -150,5 +161,7 @@ JSBool MozJSEval::cmd(JSContext *cx, uintN argc, jsval *vp) {
 	JS_SET_RVAL(cx, vp, JSVAL_VOID); // return undefined
 	return JS_TRUE;
 }
+
+
 
 }
