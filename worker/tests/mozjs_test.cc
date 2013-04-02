@@ -1,3 +1,4 @@
+#include <time.h>
 #include <gtest/gtest.h>
 
 #include "../eval.hh"
@@ -88,4 +89,43 @@ TEST(MozJsTest, Hostname) {
 	EXPECT_TRUE(cmdb[0].opts["message"].isString());
 
 	ASSERT_EQ(0, eval.set_hostname("test2", 5));
+	/* TODO
+	const char *script2 = "host = 'foo';\n";
+	EXPECT_FALSE(
+		0 == eval.compile(script, strlen(script))
+		&& 0 == eval.exec()
+	);
+	*/
+}
+
+TEST(MozJsTest, StateSetGet) {
+	hammy::MozJSEval eval;
+	hammy::State s;
+	EXPECT_EQ(0, eval.init());
+	ASSERT_EQ(0, eval.set_hostname("test", 4));
+	eval.set_state(&s);
+
+	const char *script =
+		"var x = 10;\n"
+		"set_state('x', x);\n"
+		"if(x === get_state('x')) {\n"
+		"    cmd('log', {'message': 'x_ok'});\n"
+		"}\n"
+		"var y = 'hello';\n"
+		"set_state('y', y);\n"
+		"if(y === get_state('y')) {\n"
+		"    cmd('log', {'message': 'y_ok'});\n"
+		"}\n"
+		"var z = 3.1415;"
+		"if(z === get_state('z')) {\n"
+		"    cmd('log', {'message': 'z_ok'});\n"
+		"}\n";
+
+	EXPECT_EQ(0, eval.compile(script, strlen(script)));
+	EXPECT_EQ(0, eval.exec());
+	EXPECT_EQ("", eval.last_error());
+
+	hammy::CmdBuf &cmdb = eval.get_cmdbuf();
+	EXPECT_EQ(2, cmdb.size());
+	EXPECT_EQ(2, s.size());
 }

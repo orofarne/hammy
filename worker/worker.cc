@@ -119,7 +119,7 @@ void Worker::write_cmdbuf() {
 		m_pack.pack_map(it->opts.size());
 		for(Hash::const_iterator jt = it->opts.begin(); jt != it->opts.end(); ++jt) {
 			m_pack.pack(jt->first);
-			pack_jsval(&m_pack, jt->second);
+			pack_jsval(m_evl.context(), &m_pack, jt->second);
 		}
 	}
 }

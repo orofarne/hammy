@@ -23,11 +23,15 @@ class MozJSEval {
 		std::string last_error();
 		CmdBuf &get_cmdbuf();
 
+		JSContext *context() { return m_cx; }
+
 	private:
 		// The error reporter callback.
 		static void reportError(JSContext *cx, const char *message, JSErrorReport *report);
 
 		static JSBool cmd(JSContext *cx, uintN argc, jsval *vp);
+		static JSBool get_state(JSContext *cx, uintN argc, jsval *vp);
+		static JSBool set_state(JSContext *cx, uintN argc, jsval *vp);
 
 	private:
 		// JS variables.

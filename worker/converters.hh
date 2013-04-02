@@ -67,7 +67,7 @@ packer< Stream > & 	pack_raw_body (const char *b, size_t l)
 */
 
 template<typename P>
-void pack_jsval(P *packer, js::Value const &val) {
+void pack_jsval(JSContext *cx, P *packer, js::Value const &val) {
 	if(val.isNull() || val.isUndefined()) {
 		packer->pack_nil();
 	} else if(val.isTrue()) {
@@ -82,16 +82,7 @@ void pack_jsval(P *packer, js::Value const &val) {
 		JSString *str = val.toString();
 		size_t N = JS_GetStringLength(str);
 		packer->pack_raw(N);
-		char *buf = new char[N];
-		try {
-			ASSERTPP(N == JS_EncodeStringToBuffer(str, buf, N));
-			packer->pack_raw_body(buf, N);
-		}
-		catch(...) {
-			delete[] buf;
-			throw;
-		}
-		delete[] buf;
+		packer->pack_raw_body(JS_EncodeString(cx, str), N);
 	} else if(val.isObject()) {
 		throw std::runtime_error("Object as argument");
 	}
