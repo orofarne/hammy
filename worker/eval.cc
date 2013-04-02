@@ -146,8 +146,8 @@ std::string MozJSEval::last_error() {
  ************************************************************************/
 
 JSBool MozJSEval::cmd(JSContext *cx, uintN argc, jsval *vp) {
-	JSString* name_raw;
-	JSObject* opts_raw;
+	JSString* name_raw = NULL;
+	JSObject* opts_raw = NULL;
 
 	char *name;
 
