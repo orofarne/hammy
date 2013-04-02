@@ -94,9 +94,12 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 	// CmdBuffer
 	CmdBuf &cmdb = m_evl.get_cmdbuf();
 	m_pack.pack(std::string("CmdBuffer"));
-	m_pack.pack_map(cmdb.size());
+	m_pack.pack_array(cmdb.size());
 	for(CmdBuf::const_iterator it = cmdb.begin(); it != cmdb.end(); ++it) {
+		m_pack.pack_map(2);
+		m_pack.pack(std::string("Cmd"));
 		m_pack.pack(it->cmd);
+		m_pack.pack(std::string("Options"));
 		m_pack.pack_map(it->opts.size());
 		for(Hash::const_iterator jt = it->opts.begin(); jt != it->opts.end(); ++jt) {
 			m_pack.pack(jt->first);
