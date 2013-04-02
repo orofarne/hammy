@@ -16,9 +16,9 @@ import (
 type process struct {
 	*exec.Cmd
 	Count uint
-	Stdin io.Writer
-	Stdout io.Reader
-	Stderr bytes.Buffer
+	PStdin io.Writer
+	PStdout io.Reader
+	PStderr bytes.Buffer
 }
 
 type WorkerProcessInput struct {
@@ -103,7 +103,7 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 		IData: data,
 	}
 
-	enc := msgpack.NewEncoder(worker.Stdin)
+	enc := msgpack.NewEncoder(worker.PStdin)
 	err = enc.Encode(pInput)
 	if err != nil {
 		cEnd <- 1
@@ -112,7 +112,7 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 	}
 
 	// wait, read and unmarshal result
-	dec := msgpack.NewDecoder(worker.Stdout, nil)
+	dec := msgpack.NewDecoder(worker.PStdout, nil)
 	err = dec.Decode(&res)
 	cEnd <- 1
 	toRes := <- cEnd
@@ -120,7 +120,7 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 		case toRes == 2:
 			err = fmt.Errorf("SPExexuter timeout for host %v", key)
 		case err != nil:
-			err = fmt.Errorf("SPExexuter error: %#v, child stderr: %#v", err, worker.Stderr.String())
+			err = fmt.Errorf("SPExexuter error: %#v, child stderr: %#v", err, worker.PStderr.String())
 	}
 	return
 }
@@ -225,18 +225,18 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 		// Creating new subprocess
 		worker.Count = 0
 		worker.Cmd = exec.Command(e.cmdLine)
-		worker.Stdin, err = worker.Cmd.StdinPipe()
+		worker.PStdin, err = worker.Cmd.StdinPipe()
 		if err != nil {
 			worker.Cmd = nil
 			return
 		}
-		worker.Stdout, err = worker.Cmd.StdoutPipe()
+		worker.PStdout, err = worker.Cmd.StdoutPipe()
 		if err != nil {
 			worker.Cmd = nil
 			return
 		}
-		worker.Stderr.Reset()
-		worker.Cmd.Stderr = &worker.Stderr
+		worker.PStderr.Reset()
+		worker.Cmd.Stderr = &worker.PStderr
 		err = worker.Start()
 		if err != nil {
 			worker.Cmd = nil
