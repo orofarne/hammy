@@ -39,9 +39,9 @@ set(WORKER_LIB_SOURCES
 
 add_library(worker_lib STATIC ${WORKER_LIB_SOURCES})
 
-add_executable(worker main.cc)
-add_dependencies(worker worker_lib)
-target_link_libraries(worker
+add_executable(hammy_worker main.cc)
+add_dependencies(hammy_worker worker_lib)
+target_link_libraries(hammy_worker
   worker_lib
   ${MsgPack_LIBRARIES}
   ${MOZJS_LIBRARY}
