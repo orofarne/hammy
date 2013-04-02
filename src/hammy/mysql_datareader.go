@@ -13,6 +13,8 @@ type MySQLDataReader struct {
 	db *sql.DB
 	tableName string
 	logTableName string
+	hostTableName string
+	itemTableName string
 	pool chan int
 }
 
@@ -25,6 +27,8 @@ func NewMySQLDataReader(cfg Config) (dr *MySQLDataReader, err error) {
 
 	dr.tableName = cfg.MySQLDataReader.Table
 	dr.logTableName = cfg.MySQLDataReader.LogTable
+	dr.hostTableName = cfg.MySQLDataReader.HostTable
+	dr.itemTableName = cfg.MySQLDataReader.ItemTable
 
 	dr.pool = make(chan int, cfg.MySQLDataReader.MaxConn)
 	for i := 0; i < cfg.MySQLDataReader.MaxConn; i++ {
@@ -46,7 +50,7 @@ func (dr *MySQLDataReader) Read(hostKey string, itemKey string, from uint64, to 
 		tName = dr.tableName
 	}
 
-	sqlq := fmt.Sprintf("SELECT UNIX_TIMESTAMP(`timestamp`), `value` FROM `%s` WHERE `host` = ? AND `item` = ? AND `timestamp` >= FROM_UNIXTIME(?) AND `timestamp` <= FROM_UNIXTIME(?) ORDER BY `timestamp`", tName)
+	sqlq := fmt.Sprintf("SELECT UNIX_TIMESTAMP(`history`.`timestamp`), `history`.`value` FROM `%s` `history` JOIN `%s` `item` ON `item`.`id` = `history`.`item_id` JOIN `%s` `host` ON `host`.`id` = `item`.`host_id` WHERE `host`.`name` = ? AND `item`.`name` = ? AND `history`.`timestamp` >= FROM_UNIXTIME(?) AND `history`.`timestamp` <= FROM_UNIXTIME(?) ORDER BY `history`.`timestamp`", tName, dr.itemTableName, dr.hostTableName)
 	rows, err := dr.db.Query(sqlq, hostKey, itemKey, from, to)
 	if err != nil {
 		return
