@@ -27,6 +27,8 @@ Database = "hammy"
 User = "root"
 Table = "history"
 LogTable = "history_log"
+HostTable = "history_host"
+ItemTable = "history_item"
 
 [MySQLDataReader]
 Active = true
@@ -34,3 +36,5 @@ Database = "hammy"
 User = "root"
 Table = "history"
 LogTable = "history_log"
+HostTable = "history_host"
+ItemTable = "history_item"
