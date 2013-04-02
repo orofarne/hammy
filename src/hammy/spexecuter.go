@@ -235,6 +235,7 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 			worker.Cmd = nil
 			return
 		}
+		worker.Stderr.Reset()
 		worker.Cmd.Stderr = &worker.Stderr
 		err = worker.Start()
 		if err != nil {
