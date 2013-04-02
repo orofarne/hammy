@@ -16,7 +16,8 @@ class MozJSEval {
 
 		int init();
 
-		int eval(const char *script);
+		int compile(const char *script, size_t len);
+		int exec();
 		std::string last_error();
 		CmdBuf &get_cmdbuf();
 
@@ -31,6 +32,7 @@ class MozJSEval {
 		JSRuntime *m_rt;
 		JSContext *m_cx;
 		JSObject *m_global;
+		JSObject *m_script;
 
 		std::ostringstream m_error;
 		CmdBuf m_cmdbuf;

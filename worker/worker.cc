@@ -57,6 +57,12 @@ void Worker::socket_readable() {
 	}
 }
 
+void Worker::run() {
+	while(true) {
+		socket_readable();
+	}
+}
+
 void Worker::process_message(msgpack::object msg, auto_zone& life) {
 	msgpack::object *Key = NULL;
 	msgpack::object *Trigger = NULL;
@@ -83,11 +89,9 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 	ASSERTPP(Key && Trigger && State && IData);
 
 	std::string key(Key->via.raw.ptr, Key->via.raw.size);
-	std::string trigger(Trigger->via.raw.ptr, Trigger->via.raw.size);
 
-	int r = m_evl.eval(trigger.c_str());
-	if (r != 0)
-		throw std::runtime_error(m_evl.last_error());
+	m_evl.compile(Trigger->via.raw.ptr, Trigger->via.raw.size);
+	m_evl.exec();
 
 	m_pack.pack_map(2);
 
@@ -112,12 +116,6 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 	m_pack.pack_nil();
 
 	fw.flush();
-}
-
-void Worker::run() {
-	while(true) {
-		socket_readable();
-	}
 }
 
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include <string>
 #include <map>
 #include <vector>
@@ -17,5 +19,12 @@ struct Cmd {
 };
 
 typedef std::vector< Cmd > CmdBuf;
+
+struct StateElem {
+	uint64_t LastUpdate;
+	js::Value Value;
+};
+
+typedef std::map< std::string, StateElem > State;
 
 }

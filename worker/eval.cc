@@ -61,20 +61,31 @@ int MozJSEval::init() {
 	return 0;
 }
 
-int MozJSEval::eval(const char *script) {
+int MozJSEval::compile(const char *script, size_t len) {
 	jsval rval;
 	JSString *str;
 	JSBool ok;
-	const char *filename = "noname";
+	const char *filename = "trigger";
 	uintN lineno = 0;
 
 	m_cmdbuf.clear();
 	m_error.str( std::string() );
 	m_error.clear();
 
-	ok = JS_EvaluateScript(m_cx, m_global, script, strlen(script), filename, lineno, &rval);
-	if (!ok)
+	m_script = JS_CompileScript(m_cx, m_global, script, len, filename, lineno);
+	if (m_script == NULL)
 		return 1;
+
+	return 0;
+}
+
+int MozJSEval::exec() {
+	jsval result;
+
+	if (!JS_ExecuteScript(m_cx, JS_GetGlobalObject(m_cx), m_script, &result))
+		return 1;
+
+	JS_MaybeGC(m_cx);
 
 	return 0;
 }
