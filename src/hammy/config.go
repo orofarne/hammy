@@ -147,6 +147,10 @@ type Config struct {
 		Table string
 		// table that contains text history
 		LogTable string
+		// table that contains hosts
+		HostTable string
+		// table that contains items
+		ItemTable string
 		// Limit for parallel connections
 		MaxConn int
 	}
@@ -164,6 +168,10 @@ type Config struct {
 		Table string
 		// table that contains text history
 		LogTable string
+		// table that contains hosts
+		HostTable string
+		// table that contains items
+		ItemTable string
 		// Limit for parallel connections
 		MaxConn int
 	}
@@ -248,6 +256,8 @@ func SetConfigDefaults(cfg *Config) error {
 		if cfg.MySQLSaver.User == "" { return fmt.Errorf("Empty cfg.MySQLSaver.User") }
 		if cfg.MySQLSaver.Table == "" { return fmt.Errorf("Empty cfg.MySQLSaver.Table") }
 		if cfg.MySQLSaver.LogTable == "" { return fmt.Errorf("Empty cfg.MySQLSaver.LogTable") }
+		if cfg.MySQLSaver.HostTable == "" { return fmt.Errorf("Empty cfg.MySQLSaver.HostTable") }
+		if cfg.MySQLSaver.ItemTable == "" { return fmt.Errorf("Empty cfg.MySQLSaver.ItemTable") }
 		if cfg.MySQLSaver.MaxConn == 0 { cfg.MySQLSaver.MaxConn = 10 }
 	}
 
@@ -257,6 +267,8 @@ func SetConfigDefaults(cfg *Config) error {
 		if cfg.MySQLDataReader.User == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.User") }
 		if cfg.MySQLDataReader.Table == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.Table") }
 		if cfg.MySQLDataReader.LogTable == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.LogTable") }
+		if cfg.MySQLDataReader.HostTable == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.HostTable") }
+		if cfg.MySQLDataReader.ItemTable == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.ItemTable") }
 		if cfg.MySQLDataReader.MaxConn == 0 { cfg.MySQLDataReader.MaxConn = 10 }
 	}
 
