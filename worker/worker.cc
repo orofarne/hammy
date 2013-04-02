@@ -94,14 +94,12 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 	m_evl.set_state(&m_state);
 
 	m_evl.compile(Trigger->via.raw.ptr, Trigger->via.raw.size);
-	m_evl.exec();
 
+	process_data(IData);
+
+	// Answer
 	m_pack.pack_map(2);
-
-	// CmdBuffer
 	write_cmdbuf();
-
-	// State
 	write_state();
 
 	fw.flush();
@@ -158,6 +156,43 @@ void Worker::write_state() {
 		m_pack.pack_uint64(it->second.LastUpdate);
 		m_pack.pack(std::string("Value"));
 		pack_jsval(m_evl.context(), &m_pack, it->second.Value);
+	}
+}
+
+void Worker::process_data(msgpack::object *obj) {
+	/*
+	 * type IncomingValueData struct {
+	 *     Timestamp uint64
+	 *     Value interface{}
+	 * }
+	 *
+	 * type IncomingHostData map[string][]IncomingValueData
+	*/
+
+	ASSERTPP(obj->type == msgpack::type::MAP);
+	for(uint32_t i = 0; i < obj->via.map.size; ++i) {
+		msgpack::object_kv &kv = obj->via.map.ptr[i];
+		ASSERTPP(kv.key.type == msgpack::type::RAW);
+		ASSERTPP(0 == m_evl.set_key(kv.key.via.raw.ptr, kv.key.via.raw.size));
+		ASSERTPP(kv.val.type == msgpack::type::ARRAY);
+		for(uint32_t j = 0; j < obj->via.array.size; ++j) {
+			msgpack::object &e = kv.val.via.array.ptr[j];
+			ASSERTPP(e.type == msgpack::type::MAP);
+			for(uint32_t k = 0; k < e.via.map.size; ++k) {
+				msgpack::object_kv &kv2 = e.via.map.ptr[i];
+				ASSERTPP(kv2.key.type == msgpack::type::RAW);
+				if(0 == strncmp(kv2.key.via.raw.ptr, "Timestamp", 9)) {
+					ASSERTPP(kv2.val.type == msgpack::type::POSITIVE_INTEGER);
+					m_evl.set_timestamp(kv2.val.via.u64);
+				}
+				if(0 == strncmp(kv2.key.via.raw.ptr, "Value", 5)) {
+					js::Value value;
+					unpack_jsval(m_evl.context(), value, kv2.val);
+					m_evl.set_value(value);
+				}
+			}
+			m_evl.exec();
+		}
 	}
 }
 

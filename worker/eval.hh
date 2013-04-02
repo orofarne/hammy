@@ -15,8 +15,11 @@ class MozJSEval {
 		~MozJSEval();
 
 		int init();
-		int set_hostname(const char *name, size_t len);
 		void set_state(State *state);
+		int set_hostname(const char *name, size_t len);
+		int set_key(const char *key, size_t len);
+		int set_timestamp(uint64_t ts);
+		int set_value(js::Value val);
 
 		int compile(const char *script, size_t len);
 		int exec();

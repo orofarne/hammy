@@ -71,6 +71,27 @@ int MozJSEval::set_hostname(const char *name, size_t len) {
 	return 0;
 }
 
+int MozJSEval::set_key(const char *key, size_t len) {
+	JSString *str = JS_NewStringCopyN(m_cx, key , len);
+	if (!JS_DefineProperty(m_cx, m_global, "key", STRING_TO_JSVAL(str), NULL, NULL, JSPROP_READONLY))
+		return 1;
+	return 0;
+}
+
+int MozJSEval::set_timestamp(uint64_t ts) {
+	double msec = ts / 1000.0;
+	JSObject *date = JS_NewDateObjectMsec(m_cx, msec);
+	if (!JS_DefineProperty(m_cx, m_global, "timestamp", OBJECT_TO_JSVAL(date), NULL, NULL, JSPROP_READONLY))
+		return 1;
+	return 0;
+}
+
+int MozJSEval::set_value(js::Value val) {
+	if (!JS_DefineProperty(m_cx, m_global, "value", js::Jsvalify(val), NULL, NULL, JSPROP_READONLY))
+		return 1;
+	return 0;
+}
+
 void MozJSEval::set_state(State *state) {
 	m_state = state;
 }

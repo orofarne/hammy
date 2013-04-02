@@ -22,6 +22,7 @@ class Worker {
 		void read_state(msgpack::object *obj);
 		void write_state();
 		void write_cmdbuf();
+		void process_data(msgpack::object *obj);
 
 	private:
 		int m_in_sock;
