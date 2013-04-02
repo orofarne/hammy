@@ -19,7 +19,7 @@ class Worker {
 
 		void socket_readable();
 		void process_message(msgpack::object msg, auto_zone& life);
-		void read_state();
+		void read_state(msgpack::object *obj);
 		void write_state();
 		void write_cmdbuf();
 

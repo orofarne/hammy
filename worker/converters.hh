@@ -2,7 +2,10 @@
 
 #include "asserts.hh"
 
+#include <stdint.h>
+
 #include <stdexcept>
+#include <limits>
 
 #include <js/jsapi.h>
 #include <js/jsvalue.h>
@@ -85,6 +88,63 @@ void pack_jsval(JSContext *cx, P *packer, js::Value const &val) {
 		packer->pack_raw_body(JS_EncodeString(cx, str), N);
 	} else if(val.isObject()) {
 		throw std::runtime_error("Object as argument");
+	}
+}
+
+
+
+/* enum object_type {
+ *     NIL                     = MSGPACK_OBJECT_NIL,
+ *     BOOLEAN                 = MSGPACK_OBJECT_BOOLEAN,
+ *     POSITIVE_INTEGER        = MSGPACK_OBJECT_POSITIVE_INTEGER,
+ *     NEGATIVE_INTEGER        = MSGPACK_OBJECT_NEGATIVE_INTEGER,
+ *     DOUBLE                  = MSGPACK_OBJECT_DOUBLE,
+ *     RAW                     = MSGPACK_OBJECT_RAW,
+ *     ARRAY                   = MSGPACK_OBJECT_ARRAY,
+ *     MAP                     = MSGPACK_OBJECT_MAP,
+ * };
+ *
+ * union union_type {
+ *     bool boolean;
+ *     uint64_t u64;
+ *     int64_t  i64;
+ *     double   dec;
+ *     object_array array;
+ *     object_map map;
+ *     object_raw raw;
+ *     object_raw ref;  // obsolete
+ * };
+ */
+
+void unpack_jsval(JSContext *cx, js::Value &val, msgpack::object &obj) {
+	JSString *str;
+
+	switch(obj.type) {
+		case msgpack::type::NIL:
+			val.setNull();
+			break;
+		case msgpack::type::POSITIVE_INTEGER:
+			if (obj.via.u64 < std::numeric_limits<int32_t>::max())
+				val.setInt32(obj.via.u64);
+			else
+				val.setNumber(double(obj.via.u64));
+			break;
+		case msgpack::type::NEGATIVE_INTEGER:
+			if (obj.via.i64 > std::numeric_limits<int32_t>::min()
+				&& obj.via.i64 < std::numeric_limits<int32_t>::max())
+				val.setInt32(obj.via.i64);
+			else
+				val.setNumber(double(obj.via.i64));
+			break;
+		case msgpack::type::DOUBLE:
+			val.setNumber(obj.via.dec);
+			break;
+		case msgpack::type::RAW:
+			str = JS_NewStringCopyN(cx, obj.via.raw.ptr, obj.via.raw.size);
+			val.setString(str);
+			break;
+		default:
+			throw std::runtime_error("Object as argument");
 	}
 }
 

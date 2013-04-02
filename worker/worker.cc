@@ -90,7 +90,7 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 
 	ASSERTPP(0 == m_evl.set_hostname(Hostname->via.raw.ptr, Hostname->via.raw.size));
 
-	read_state();
+	read_state(State);
 	m_evl.set_state(&m_state);
 
 	m_evl.compile(Trigger->via.raw.ptr, Trigger->via.raw.size);
@@ -124,13 +124,41 @@ void Worker::write_cmdbuf() {
 	}
 }
 
-void Worker::read_state() {
+void Worker::read_state(msgpack::object *obj) {
+	m_state.clear();
 
+	ASSERTPP(obj->type == msgpack::type::MAP);
+	for(uint32_t i = 0; i < obj->via.map.size; ++i) {
+		msgpack::object_kv &kv = obj->via.map.ptr[i];
+		ASSERTPP(kv.key.type == msgpack::type::RAW);
+		std::string key(kv.key.via.raw.ptr, kv.key.via.raw.size);
+		ASSERTPP(kv.val.type == msgpack::type::MAP);
+		StateElem elem;
+		for(uint32_t j = 0; i < kv.val.via.map.size; ++j) {
+			msgpack::object_kv &kv2 = kv.val.via.map.ptr[j];
+			ASSERTPP(kv2.key.type == msgpack::type::RAW);
+			if(0 == strncmp(kv2.key.via.raw.ptr, "LastUpdate", 10)) {
+				ASSERTPP(kv2.val.type == msgpack::type::POSITIVE_INTEGER);
+				elem.LastUpdate = kv2.val.via.u64;
+			} else if(0 == strncmp(kv2.key.via.raw.ptr, "Value", 5)){
+				unpack_jsval(m_evl.context(), elem.Value, *obj);
+			}
+		}
+		m_state[key] = elem;
+	}
 }
 
 void Worker::write_state() {
 	m_pack.pack(std::string("State"));
-	m_pack.pack_nil();
+	m_pack.pack_map(m_state.size());
+	for(State::const_iterator it = m_state.begin(); it != m_state.end(); ++it) {
+		m_pack.pack(it->first);
+		m_pack.pack_map(2);
+		m_pack.pack(std::string("LastUpdate"));
+		m_pack.pack_uint64(it->second.LastUpdate);
+		m_pack.pack(std::string("Value"));
+		pack_jsval(m_evl.context(), &m_pack, it->second.Value);
+	}
 }
 
 }
