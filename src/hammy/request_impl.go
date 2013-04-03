@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 	"fmt"
+	"log"
 	"reflect"
 )
 
@@ -116,6 +117,17 @@ func (rh *RequestHandlerImpl) Handle(data IncomingData) (errs map[string]error) 
 	return
 }
 
+func (rh *RequestHandlerImpl) logErr(key string, message string) {
+	cmdb := make(CmdBuffer, 1)
+	cmdb[0].Cmd = "log"
+	cmdb[0].Options = make(map[string]interface{})
+	cmdb[0].Options["message"] = message
+	err := rh.CBProcessor.Process(key, &cmdb)
+	if err != nil {
+		log.Printf("!! Error in cmd_buffer: %v", err)
+	}
+}
+
 func (rh *RequestHandlerImpl) processTrigger(
 		key string,
 		trigger string,
@@ -132,6 +144,7 @@ func (rh *RequestHandlerImpl) processTrigger(
 	newState, cmdb, err := rh.Exec.ProcessTrigger(key, trigger, &state, data)
 	if err != nil {
 		ret.Err = fmt.Errorf("Trigger processor error: %v", err)
+		rh.logErr(key, err.Error())
 		return
 	}
 
@@ -168,6 +181,7 @@ func (rh *RequestHandlerImpl) processTrigger(
 				newState, cmdb, err = rh.Exec.ProcessTrigger(key, trigger, &state, data)
 				if err != nil {
 					ret.Err = fmt.Errorf("Trigger processor error: %v", err)
+					rh.logErr(key, err.Error())
 					return
 				}
 

@@ -91,8 +91,9 @@ void pack_jsval(JSContext *cx, P *packer, js::Value const &val) {
 		jsval rval;
 		if(!JS_CallFunctionName(cx, &val.toObject(), "getTime", 0, NULL, &rval))
 			throw std::runtime_error("JS_CallFunctionName");
-		ASSERTPP(val.isDouble());
-		packer->pack_double(val.toDouble() / 1000.0);
+		ASSERTPP(js::Valueify(rval).isNumber());
+		packer->pack_uint64(js::Valueify(rval).toNumber() * 1000.0);
+		//pack_jsval(cx, packer, js::Valueify(rval));
 	} else {
 		throw std::runtime_error("Can't pack argument");
 	}

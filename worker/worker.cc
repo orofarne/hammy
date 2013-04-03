@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 namespace hammy {
@@ -91,7 +92,11 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 	read_state(State);
 	m_evl.set_state(&m_state);
 
-	m_evl.compile(Trigger->via.raw.ptr, Trigger->via.raw.size);
+	if(0 != m_evl.compile(Trigger->via.raw.ptr, Trigger->via.raw.size)) {
+		std::ostringstream msg;
+		msg << "Compile error: '" << m_evl.last_error() << "'";
+		throw std::runtime_error(msg.str());
+	}
 
 	process_data(IData);
 
@@ -189,7 +194,13 @@ void Worker::process_data(msgpack::object *obj) {
 					m_evl.set_value(value);
 				}
 			}
-			m_evl.exec();
+			if(0 != m_evl.exec()) {
+				std::ostringstream msg;
+				msg << "Eval [`"
+					<< std::string(kv.key.via.raw.ptr, kv.key.via.raw.size)
+					<< "`] error: '" << m_evl.last_error() << "'";
+				throw std::runtime_error(msg.str());
+			}
 		}
 	}
 }
