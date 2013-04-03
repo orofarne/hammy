@@ -36,6 +36,7 @@ class MozJSEval {
 		static JSBool set_state(JSContext *cx, uintN argc, jsval *vp);
 		static JSBool get_state(JSContext *cx, uintN argc, jsval *vp);
 		static JSBool get_state_ext(JSContext *cx, uintN argc, jsval *vp);
+		static JSBool state_keys(JSContext *cx, uintN argc, jsval *vp);
 
 	private:
 		// JS variables.

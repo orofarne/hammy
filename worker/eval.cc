@@ -19,6 +19,7 @@ JSFunctionSpec MozJSEval::m_global_functions[] = {
 	JS_FS("set_state",		MozJSEval::set_state,		2,	0),
 	JS_FS("get_state",		MozJSEval::get_state,		1,	1),
 	JS_FS("get_state_ext",	MozJSEval::get_state_ext,	1,	1),
+	JS_FS("state_keys",		MozJSEval::state_keys,		1,	1),
 	JS_FS_END
 };
 
@@ -246,6 +247,35 @@ JSBool MozJSEval::set_state(JSContext *cx, uintN argc, jsval *vp) {
 	(*m_instance->m_state)[key_str] = se;
 
 	JS_SET_RVAL(cx, vp, JSVAL_VOID); // return undefined
+	return JS_TRUE;
+}
+
+JSBool MozJSEval::state_keys(JSContext *cx, uintN argc, jsval *vp) {
+	JSString* prefix_raw = NULL;
+	char *prefix_str = NULL;
+
+	if(!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "/S", &prefix_raw))
+		return JS_FALSE;
+
+	if(prefix_raw != NULL)
+		prefix_str = JS_EncodeString(cx, prefix_raw);
+
+	JSObject *res = JS_NewArrayObject(cx, 0, NULL);
+	if(res == NULL)
+		return JS_FALSE;
+
+	int i = 0;
+	for(State::const_iterator it = m_instance->m_state->begin();
+			it != m_instance->m_state->end(); ++it) {
+		if(prefix_str == NULL || 0 == it->first.compare(0, strlen(prefix_str), prefix_str)) {
+			JSString *str = JS_NewStringCopyN(cx, it->first.data(), it->first.size());
+			jsval v = STRING_TO_JSVAL(str);
+			if(!JS_SetElement(cx, res, i++, &v))
+				return JS_FALSE;
+		}
+	}
+
+	JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(res));
 	return JS_TRUE;
 }
 

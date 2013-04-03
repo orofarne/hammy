@@ -240,3 +240,37 @@ TEST(MozJsTest, StateSetGet) {
 	EXPECT_EQ(4, cmdb.size());
 	EXPECT_EQ(2, s.size());
 }
+
+TEST(MozJsTest, StateKeys) {
+	hammy::MozJSEval eval;
+	hammy::State s;
+	EXPECT_EQ(0, eval.init());
+	ASSERT_EQ(0, eval.set_hostname("test", 4));
+	ASSERT_EQ(0, eval.set_key("mykey", 5));
+	ASSERT_EQ(0, eval.set_timestamp(TIME_X));
+	ASSERT_EQ(0, eval.set_value(js::DoubleValue(3.1415)));
+	eval.set_state(&s);
+
+	const char *script =
+		"set_state('foo', 10);\n"
+		"set_state('bar', 'hello');\n"
+		"set_state('bazz', 3.1415);\n"
+		"var keys = state_keys();\n"
+		"for(var k in keys) {\n"
+		"    cmd('log');\n"
+		"}\n"
+		"var keys2 = state_keys('ba');\n"
+		"for(var k in keys2) {\n"
+		"    cmd('log');\n"
+		"}\n"
+		;
+
+	EXPECT_EQ(0, eval.compile(script, strlen(script)));
+	EXPECT_EQ("", eval.last_error());
+	EXPECT_EQ(0, eval.exec());
+	EXPECT_EQ("", eval.last_error());
+
+	hammy::CmdBuf &cmdb = eval.get_cmdbuf();
+	EXPECT_EQ(5, cmdb.size());
+	EXPECT_EQ(3, s.size());
+}
