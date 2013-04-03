@@ -87,8 +87,14 @@ void pack_jsval(JSContext *cx, P *packer, js::Value const &val) {
 		size_t N = JS_GetStringLength(str);
 		packer->pack_raw(N);
 		packer->pack_raw_body(JS_EncodeString(cx, str), N);
-	} else if(val.isObject()) {
-		throw std::runtime_error("Object as argument");
+	} else if(val.isObject() && JS_TRUE == JS_ObjectIsDate(cx, &val.toObject())) {
+		jsval rval;
+		if(!JS_CallFunctionName(cx, &val.toObject(), "getTime", 0, NULL, &rval))
+			throw std::runtime_error("JS_CallFunctionName");
+		ASSERTPP(val.isDouble());
+		packer->pack_double(val.toDouble() / 1000.0);
+	} else {
+		throw std::runtime_error("Can't pack argument");
 	}
 }
 
