@@ -108,13 +108,11 @@ TEST(MozJsTest, Hostname) {
 	EXPECT_TRUE(cmdb[0].opts["message"].isString());
 
 	ASSERT_EQ(0, eval.set_hostname("test2", 5));
-	/* TODO
-	const char *script2 = "host = 'foo';\n";
-	EXPECT_FALSE(
-		0 == eval.compile(script, strlen(script))
-		&& 0 == eval.exec()
-	);
-	*/
+	const char *script2 = "host = 'foo'; if(host === 'test2'){cmd('log');}\n";
+	EXPECT_EQ(0, eval.compile(script2, strlen(script2)));
+	EXPECT_EQ(0, cmdb.size());
+	EXPECT_EQ(0, eval.exec());
+	EXPECT_EQ(1, cmdb.size());
 }
 
 TEST(MozJsTest, Key) {
@@ -137,13 +135,13 @@ TEST(MozJsTest, Key) {
 	EXPECT_TRUE(cmdb[0].opts["message"].isString());
 
 	ASSERT_EQ(0, eval.set_key("k2", 2));
-	/* TODO
-	const char *script2 = "key = 'bar';\n";
-	EXPECT_FALSE(
-		0 == eval.compile(script, strlen(script))
-		&& 0 == eval.exec()
-	);
-	*/
+
+	ASSERT_EQ(0, eval.set_key("test2", 5));
+	const char *script2 = "key = 'foo'; if(key === 'test2'){cmd('log');}\n";
+	EXPECT_EQ(0, eval.compile(script2, strlen(script2)));
+	EXPECT_EQ(0, cmdb.size());
+	EXPECT_EQ(0, eval.exec());
+	EXPECT_EQ(1, cmdb.size());
 }
 
 TEST(MozJsTest, Timestamp) {
@@ -166,13 +164,11 @@ TEST(MozJsTest, Timestamp) {
 	EXPECT_TRUE(cmdb[0].opts["message"].isString());
 
 	ASSERT_EQ(0, eval.set_timestamp(TIME_X + 10));
-	/* TODO
-	const char *script2 = "key = 'bar';\n";
-	EXPECT_FALSE(
-		0 == eval.compile(script, strlen(script))
-		&& 0 == eval.exec()
-	);
-	*/
+	const char *script2 = "timestamp = 103; if(timestamp == 103){cmd('log');}\n";
+	EXPECT_EQ(0, eval.compile(script2, strlen(script2)));
+	EXPECT_EQ(0, cmdb.size());
+	EXPECT_EQ(0, eval.exec());
+	EXPECT_EQ(0, cmdb.size());
 }
 
 TEST(MozJsTest, Value) {
@@ -194,14 +190,14 @@ TEST(MozJsTest, Value) {
 	ASSERT_EQ(1, cmdb[0].opts.size());
 	EXPECT_TRUE(cmdb[0].opts["message"].isDouble());
 
-	ASSERT_EQ(0, eval.set_timestamp(TIME_X + 10));
-	/* TODO
-	const char *script2 = "key = 'bar';\n";
-	EXPECT_FALSE(
-		0 == eval.compile(script, strlen(script))
-		&& 0 == eval.exec()
-	);
-	*/
+	JSString *str = JS_NewStringCopyZ(eval.context(), "hello");
+	ASSERT_EQ(0, eval.set_value(js::Valueify(STRING_TO_JSVAL(str))));
+	const char *script2 = "value = 103; if(value === 'hello'){cmd('log');}\n";
+	EXPECT_EQ(0, eval.compile(script2, strlen(script2)));
+	EXPECT_EQ(0, cmdb.size());
+	EXPECT_EQ(0, eval.exec());
+	EXPECT_EQ(1, cmdb.size());
+
 }
 
 TEST(MozJsTest, StateSetGet) {
@@ -225,16 +221,22 @@ TEST(MozJsTest, StateSetGet) {
 		"if(y === get_state('y')) {\n"
 		"    cmd('log', {'message': 'y_ok'});\n"
 		"}\n"
+		"var s = get_state_ext('y');\n"
+		"if(s != null) {\n"
+		"    cmd('log', {'message': s.value.substr(0, 2)});\n"
+		"    cmd('log', {'message': s.lastUpdate.toString()});\n"
+		"}\n"
 		"var z = 3.1415;"
 		"if(z === get_state('z')) {\n"
 		"    cmd('log', {'message': 'z_ok'});\n"
 		"}\n";
 
 	EXPECT_EQ(0, eval.compile(script, strlen(script)));
+	EXPECT_EQ("", eval.last_error());
 	EXPECT_EQ(0, eval.exec());
 	EXPECT_EQ("", eval.last_error());
 
 	hammy::CmdBuf &cmdb = eval.get_cmdbuf();
-	EXPECT_EQ(2, cmdb.size());
+	EXPECT_EQ(4, cmdb.size());
 	EXPECT_EQ(2, s.size());
 }

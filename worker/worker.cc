@@ -173,11 +173,11 @@ void Worker::process_data(msgpack::object *obj) {
 		ASSERTPP(kv.key.type == msgpack::type::RAW);
 		ASSERTPP(0 == m_evl.set_key(kv.key.via.raw.ptr, kv.key.via.raw.size));
 		ASSERTPP(kv.val.type == msgpack::type::ARRAY);
-		for(uint32_t j = 0; j < obj->via.array.size; ++j) {
+		for(uint32_t j = 0; j < kv.val.via.array.size; ++j) {
 			msgpack::object &e = kv.val.via.array.ptr[j];
 			ASSERTPP(e.type == msgpack::type::MAP);
 			for(uint32_t k = 0; k < e.via.map.size; ++k) {
-				msgpack::object_kv &kv2 = e.via.map.ptr[i];
+				msgpack::object_kv &kv2 = e.via.map.ptr[k];
 				ASSERTPP(kv2.key.type == msgpack::type::RAW);
 				if(0 == strncmp(kv2.key.via.raw.ptr, "Timestamp", 9)) {
 					ASSERTPP(kv2.val.type == msgpack::type::POSITIVE_INTEGER);

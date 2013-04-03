@@ -15,9 +15,10 @@ JSClass MozJSEval::m_global_class = {
 };
 
 JSFunctionSpec MozJSEval::m_global_functions[] = {
-	JS_FS("cmd",		MozJSEval::cmd,			2,	0),
-	JS_FS("get_state",	MozJSEval::get_state,	1,	0),
-	JS_FS("set_state",	MozJSEval::set_state,	2,	0),
+	JS_FS("cmd",			MozJSEval::cmd,				2,	0),
+	JS_FS("set_state",		MozJSEval::set_state,		2,	0),
+	JS_FS("get_state",		MozJSEval::get_state,		1,	1),
+	JS_FS("get_state_ext",	MozJSEval::get_state_ext,	1,	1),
 	JS_FS_END
 };
 
@@ -196,6 +197,35 @@ JSBool MozJSEval::get_state(JSContext *cx, uintN argc, jsval *vp) {
 		JS_SET_RVAL(cx, vp, JSVAL_NULL);
 	} else {
 		JS_SET_RVAL(cx, vp, js::Jsvalify(it->second.Value));
+	}
+
+	return JS_TRUE;
+}
+
+JSBool MozJSEval::get_state_ext(JSContext *cx, uintN argc, jsval *vp) {
+	JSString* key_raw;
+
+	if(!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S", &key_raw))
+		return JS_FALSE;
+
+	char *key_str = JS_EncodeString(cx, key_raw);
+
+	State::const_iterator it = m_instance->m_state->find(key_str);
+	if (it == m_instance->m_state->end()) {
+		JS_SET_RVAL(cx, vp, JSVAL_NULL);
+	} else {
+		JSObject *res = JS_NewObject(cx, NULL, NULL, NULL);
+		if (res == NULL)
+			return JS_FALSE;
+		if (!JS_DefineProperty(cx, res, "value", js::Jsvalify(it->second.Value), NULL, NULL, 0))
+			return JS_FALSE;
+		double msec = it->second.LastUpdate / 1000.0;
+		JSObject *date = JS_NewDateObjectMsec(cx, msec);
+		if (date == NULL)
+			return JS_FALSE;
+		if (!JS_DefineProperty(cx, res, "lastUpdate", OBJECT_TO_JSVAL(date), NULL, NULL, 0))
+			return JS_FALSE;
+		JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(res));
 	}
 
 	return JS_TRUE;
