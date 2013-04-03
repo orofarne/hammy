@@ -77,7 +77,7 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case "application/json":
 			dataDecoder = json.NewDecoder(r.Body)
 			dataEncoder = json.NewEncoder(w)
-		case "application/octet-stream":
+		case "application/x-msgpack":
 			dataDecoder = msgpack.NewDecoder(r.Body, nil)
 			dataEncoder = msgpack.NewEncoder(w)
 		default:

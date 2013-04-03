@@ -16,13 +16,13 @@ import (
 type process struct {
 	*exec.Cmd
 	Count uint
-	Stdin io.Writer
-	Stdout io.Reader
-	Stderr bytes.Buffer
+	PStdin io.Writer
+	PStdout io.Reader
+	PStderr bytes.Buffer
 }
 
 type WorkerProcessInput struct {
-	Key string
+	Hostname string
 	Trigger string
 	State *State
 	IData IncomingHostData
@@ -44,6 +44,9 @@ type SPExecuter struct {
 	ms *MetricSet
 	mExecTimer *TimerMetric
 	mWorkerWaitTimer *TimerMetric
+	mErrors *CounterMetric
+	mKills *CounterMetric
+	mTimeouts *CounterMetric
 }
 
 // Create new instance of SPExecutor
@@ -66,6 +69,9 @@ func NewSPExecuter(cfg Config, metricNamespace string) *SPExecuter {
 	e.ms = NewMetricSet(metricNamespace, 30 * time.Second)
 	e.mExecTimer = e.ms.NewTimer("exec")
 	e.mWorkerWaitTimer = e.ms.NewTimer("worker_wait")
+	e.mErrors = e.ms.NewCounter("errors")
+	e.mKills = e.ms.NewCounter("kills")
+	e.mTimeouts = e.ms.NewCounter("timeouts")
 
 	return e
 }
@@ -79,6 +85,8 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 		CmdBuffer: cmdb,
 		State: newState,
 	}
+
+	defer func() { if err != nil { e.mErrors.Add(1) } } ()
 
 	// Fetch worker (may be wait for free worker)
 	worker, err := e.getWorker()
@@ -97,22 +105,24 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 
 	// marshal and send args
 	pInput := WorkerProcessInput{
-		Key: key,
+		Hostname: key,
 		Trigger: trigger,
 		State: state,
 		IData: data,
 	}
 
-	enc := msgpack.NewEncoder(worker.Stdin)
+	enc := msgpack.NewEncoder(worker.PStdin)
 	err = enc.Encode(pInput)
 	if err != nil {
 		cEnd <- 1
 		<- cEnd
+		err = fmt.Errorf("Encode error: %v, stderr: \"%s\"",
+				err, worker.PStderr.String())
 		return
 	}
 
 	// wait, read and unmarshal result
-	dec := msgpack.NewDecoder(worker.Stdout, nil)
+	dec := msgpack.NewDecoder(worker.PStdout, nil)
 	err = dec.Decode(&res)
 	cEnd <- 1
 	toRes := <- cEnd
@@ -120,8 +130,16 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 		case toRes == 2:
 			err = fmt.Errorf("SPExexuter timeout for host %v", key)
 		case err != nil:
-			err = fmt.Errorf("SPExexuter error: %#v, child stderr: %#v", err, worker.Stderr.String())
+			inf := e.workerInfo(worker)
+			e2 := e.workerKill(worker)
+			err = fmt.Errorf("SPExexuter error: %#v, child stderr: %#v, additional info: %s, killed (%v)",
+					err, worker.PStderr.String(), inf, e2)
 	}
+
+	if err == nil && worker.PStderr.String() != "" {
+		log.Printf("Not empty worker stderr: \"%s\"", worker.PStderr.String())
+	}
+
 	return
 }
 
@@ -132,6 +150,7 @@ func (e *SPExecuter) workerTimeout(worker *process, cEnd chan int) {
 		cEnd <- 1
 		return
 	case <-time.After(e.timeout):
+		e.mTimeouts.Add(1)
 		err := e.workerKill(worker)
 		if err != nil {
 			log.Printf("%s", err)
@@ -143,6 +162,18 @@ func (e *SPExecuter) workerTimeout(worker *process, cEnd chan int) {
 	panic("?!")
 }
 
+func (e *SPExecuter) workerInfo(worker *process) string {
+	var status syscall.WaitStatus
+
+	wpid, err := syscall.Wait4(worker.Process.Pid, &status, syscall.WNOHANG, nil)
+	if err != nil {
+		return fmt.Sprintf("Wait4 error: %v", err)
+	}
+
+	_ = wpid
+	return fmt.Sprintf("exit code = %v", status.ExitStatus())
+}
+
 func (e *SPExecuter) workerKill(worker *process) error {
 	defer func() {
 		worker.Cmd = nil
@@ -151,6 +182,8 @@ func (e *SPExecuter) workerKill(worker *process) error {
 	if worker.Cmd == nil || worker.Cmd.Process == nil {
 		return nil
 	}
+
+	e.mKills.Add(1)
 
 	err := worker.Process.Kill()
 	switch err {
@@ -225,17 +258,18 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 		// Creating new subprocess
 		worker.Count = 0
 		worker.Cmd = exec.Command(e.cmdLine)
-		worker.Stdin, err = worker.Cmd.StdinPipe()
+		worker.PStdin, err = worker.Cmd.StdinPipe()
 		if err != nil {
 			worker.Cmd = nil
 			return
 		}
-		worker.Stdout, err = worker.Cmd.StdoutPipe()
+		worker.PStdout, err = worker.Cmd.StdoutPipe()
 		if err != nil {
 			worker.Cmd = nil
 			return
 		}
-		worker.Cmd.Stderr = &worker.Stderr
+		worker.PStderr.Reset()
+		worker.Cmd.Stderr = &worker.PStderr
 		err = worker.Start()
 		if err != nil {
 			worker.Cmd = nil

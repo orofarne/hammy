@@ -8,3 +8,4 @@ rm -rf bin
 rm -rf pkg
 rm -rf golang
 rm -rf contrib
+rm -rf worker/build

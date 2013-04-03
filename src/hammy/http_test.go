@@ -189,7 +189,7 @@ func TestHttpInterface(t *testing.T) {
 	err = enc.Encode(buf_msg)
 	if err != nil { panic("error remarshaling (to msgpack) test data") }
 
-	resp, err = http.Post(httpAddr, "application/octet-stream", buf)
+	resp, err = http.Post(httpAddr, "application/x-msgpack", buf)
 	if err != nil { t.Fatalf("Got error: %v", err) }
 	if resp.StatusCode != 200 {
 		body, err := ioutil.ReadAll(resp.Body)
@@ -200,7 +200,7 @@ func TestHttpInterface(t *testing.T) {
 
 	// Invalid
 	buf = bytes.NewBufferString("adsfasdfasdfasdfasdfasdfasdfasdfasdfasdfasd")
-	resp, err = http.Post(httpAddr, "application/octet-stream", buf)
+	resp, err = http.Post(httpAddr, "application/x-msgpack", buf)
 	if err != nil { t.Fatalf("Got error: %v", err) }
 	if resp.StatusCode != 400 {
 		body, err := ioutil.ReadAll(resp.Body)
