@@ -5,7 +5,7 @@ set -ex
 cd `dirname "$(pwd)/$0"`
 
 # Setup golang
-hg clone -u release https://code.google.com/p/go golang
+hg clone https://code.google.com/p/go golang
 cd golang/src
 ./all.bash
 cd -

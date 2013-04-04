@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"bytes"
+	"bufio"
 	"syscall"
 	"log"
 	"github.com/ugorji/go-msgpack"
@@ -42,9 +43,11 @@ type SPExecuter struct {
 
 	//Metrics
 	ms *MetricSet
+	mRequest *TimerMetric
 	mExecTimer *TimerMetric
 	mWorkerWaitTimer *TimerMetric
 	mErrors *CounterMetric
+	mCreate *TimerMetric
 	mKills *CounterMetric
 	mTimeouts *CounterMetric
 }
@@ -67,10 +70,12 @@ func NewSPExecuter(cfg Config, metricNamespace string) *SPExecuter {
 	}
 
 	e.ms = NewMetricSet(metricNamespace, 30 * time.Second)
+	e.mRequest = e.ms.NewTimer("request")
 	e.mExecTimer = e.ms.NewTimer("exec")
 	e.mWorkerWaitTimer = e.ms.NewTimer("worker_wait")
 	e.mErrors = e.ms.NewCounter("errors")
-	e.mKills = e.ms.NewCounter("kills")
+	e.mCreate = e.ms.NewTimer("create")
+	e.mKills = e.ms.NewCounter("kill")
 	e.mTimeouts = e.ms.NewCounter("timeouts")
 
 	return e
@@ -79,6 +84,9 @@ func NewSPExecuter(cfg Config, metricNamespace string) *SPExecuter {
 func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 		data IncomingHostData) (newState *State, cmdb *CmdBuffer, err error) {
 //
+	ζ := e.mRequest.NewObservation()
+	defer func() { ζ.End() } ()
+
 	cmdb = NewCmdBuffer(0)
 	newState = NewState()
 	res := WorkerProcessOutput{
@@ -111,29 +119,36 @@ func (e *SPExecuter) ProcessTrigger(key string, trigger string, state *State,
 		IData: data,
 	}
 
-	enc := msgpack.NewEncoder(worker.PStdin)
-	err = enc.Encode(pInput)
-	if err != nil {
-		cEnd <- 1
-		<- cEnd
-		err = fmt.Errorf("Encode error: %v, stderr: \"%s\"",
-				err, worker.PStderr.String())
-		return
+	var errDec error
+	buf, errEnc := msgpack.Marshal(pInput)
+	if errEnc == nil {
+		cEnc := make(chan error)
+		go func() {
+			_, e := worker.PStdin.Write(buf)
+			cEnc <- e
+		}()
+
+		// wait, read and unmarshal result
+		buffer := bufio.NewReader(worker.PStdout)
+		dec := msgpack.NewDecoder(buffer, nil)
+		errDec = dec.Decode(&res)
+		errEnc = <- cEnc
 	}
 
-	// wait, read and unmarshal result
-	dec := msgpack.NewDecoder(worker.PStdout, nil)
-	err = dec.Decode(&res)
 	cEnd <- 1
 	toRes := <- cEnd
 	switch {
+		case toRes == 2 && errEnc == nil && errDec == nil:
+			// FIXME
+			log.Printf(">_<")
 		case toRes == 2:
-			err = fmt.Errorf("SPExexuter timeout for host %v", key)
-		case err != nil:
+			err = fmt.Errorf("SPExexuter timeout for host %v, errors: encoding(%v), decoding(%v), child stderr: %#v",
+					key, errEnc, errDec, worker.PStderr.String())
+		case errEnc != nil || errDec != nil:
 			inf := e.workerInfo(worker)
 			e2 := e.workerKill(worker)
-			err = fmt.Errorf("SPExexuter error: %#v, child stderr: %#v, additional info: %s, killed (%v)",
-					err, worker.PStderr.String(), inf, e2)
+			err = fmt.Errorf("SPExexuter error: encoding(%v), decoding(%v), child stderr: %#v, additional info: %s, killed (%v)",
+					errEnc, errDec, worker.PStderr.String(), inf, e2)
 	}
 
 	if err == nil && worker.PStderr.String() != "" {
@@ -163,8 +178,9 @@ func (e *SPExecuter) workerTimeout(worker *process, cEnd chan int) {
 }
 
 func (e *SPExecuter) workerInfo(worker *process) string {
-	var status syscall.WaitStatus
+	if worker.Cmd == nil { return "<worker.Cmd == nil>" }
 
+	var status syscall.WaitStatus
 	wpid, err := syscall.Wait4(worker.Process.Pid, &status, syscall.WNOHANG, nil)
 	if err != nil {
 		return fmt.Sprintf("Wait4 error: %v", err)
@@ -192,7 +208,7 @@ func (e *SPExecuter) workerKill(worker *process) error {
 		case syscall.ECHILD:
 			return nil
 		default:
-			if e, ok := err.(*os.SyscallError); ok && e.Err == syscall.ECHILD {
+			if e, ok := err.(*os.SyscallError); ok && (e.Err == syscall.ECHILD || e.Err == syscall.ESRCH) {
 				return nil
 			}
 			return fmt.Errorf("SPExecuter: Process.Kill error: %#v", err)
@@ -255,6 +271,9 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 	}
 
 	if worker.Cmd == nil {
+		ζ := e.mCreate.NewObservation()
+		defer func() { ζ.End() } ()
+
 		// Creating new subprocess
 		worker.Count = 0
 		worker.Cmd = exec.Command(e.cmdLine)

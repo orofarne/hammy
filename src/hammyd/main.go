@@ -14,7 +14,7 @@ import "hammy"
 // Debug and statistics
 import (
 	"net/http"
-	_ "net/http/pprof"
+//	_ "net/http/pprof"
 	_ "expvar"
 )
 

@@ -200,6 +200,8 @@ JSBool MozJSEval::get_state(JSContext *cx, uintN argc, jsval *vp) {
 		JS_SET_RVAL(cx, vp, js::Jsvalify(it->second.Value));
 	}
 
+	JS_free(cx, key_str);
+
 	return JS_TRUE;
 }
 
@@ -212,6 +214,7 @@ JSBool MozJSEval::get_state_ext(JSContext *cx, uintN argc, jsval *vp) {
 	char *key_str = JS_EncodeString(cx, key_raw);
 
 	State::const_iterator it = m_instance->m_state->find(key_str);
+	JS_free(cx, key_str);
 	if (it == m_instance->m_state->end()) {
 		JS_SET_RVAL(cx, vp, JSVAL_NULL);
 	} else {
@@ -246,6 +249,8 @@ JSBool MozJSEval::set_state(JSContext *cx, uintN argc, jsval *vp) {
 	se.Value = js::Valueify(val);
 	(*m_instance->m_state)[key_str] = se;
 
+	JS_free(cx, key_str);
+
 	JS_SET_RVAL(cx, vp, JSVAL_VOID); // return undefined
 	return JS_TRUE;
 }
@@ -253,30 +258,39 @@ JSBool MozJSEval::set_state(JSContext *cx, uintN argc, jsval *vp) {
 JSBool MozJSEval::state_keys(JSContext *cx, uintN argc, jsval *vp) {
 	JSString* prefix_raw = NULL;
 	char *prefix_str = NULL;
+	JSBool rc = JS_FALSE;
+	JSObject *res = NULL;
+	int i = 0;
 
 	if(!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "/S", &prefix_raw))
-		return JS_FALSE;
+		goto END;
 
 	if(prefix_raw != NULL)
 		prefix_str = JS_EncodeString(cx, prefix_raw);
 
-	JSObject *res = JS_NewArrayObject(cx, 0, NULL);
+	res = JS_NewArrayObject(cx, 0, NULL);
 	if(res == NULL)
-		return JS_FALSE;
+		goto END;
 
-	int i = 0;
 	for(State::const_iterator it = m_instance->m_state->begin();
 			it != m_instance->m_state->end(); ++it) {
 		if(prefix_str == NULL || 0 == it->first.compare(0, strlen(prefix_str), prefix_str)) {
 			JSString *str = JS_NewStringCopyN(cx, it->first.data(), it->first.size());
 			jsval v = STRING_TO_JSVAL(str);
 			if(!JS_SetElement(cx, res, i++, &v))
-				return JS_FALSE;
+				goto END;
 		}
 	}
 
-	JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(res));
-	return JS_TRUE;
+	rc = JS_TRUE;
+END:
+	if(prefix_str != NULL)
+		JS_free(cx, prefix_str);
+
+	if(rc == JS_TRUE) {
+		JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(res));
+	}
+	return rc;
 }
 
 }

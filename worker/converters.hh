@@ -86,7 +86,9 @@ void pack_jsval(JSContext *cx, P *packer, js::Value const &val) {
 		JSString *str = val.toString();
 		size_t N = JS_GetStringLength(str);
 		packer->pack_raw(N);
-		packer->pack_raw_body(JS_EncodeString(cx, str), N);
+		char *str_str = JS_EncodeString(cx, str);
+		packer->pack_raw_body(str_str, N);
+		JS_free(cx, str_str);
 	} else if(val.isObject() && JS_TRUE == JS_ObjectIsDate(cx, &val.toObject())) {
 		jsval rval;
 		if(!JS_CallFunctionName(cx, &val.toObject(), "getTime", 0, NULL, &rval))

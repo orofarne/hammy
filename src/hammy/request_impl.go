@@ -31,6 +31,8 @@ func (rh *RequestHandlerImpl) InitMetrics(metricsNamespace string) {
 	rh.ms = NewMetricSet(metricsNamespace, 30*time.Second)
 	rh.mHandle = rh.ms.NewTimer("handle")
 	rh.mCollisions = rh.ms.NewCounter("collisions")
+
+	rand.Seed( time.Now().UTC().UnixNano())
 }
 
 // Internal struct for processing result
@@ -158,16 +160,13 @@ func (rh *RequestHandlerImpl) processTrigger(
 		if retry {
 			// Ooops! Collision!
 			// Starting loop of retries
-			rand.Seed( time.Now().UTC().UnixNano())
 			for {
 				// Statistics
 				rh.mCollisions.Add(1)
 
 				// random sleep
-				t := rand.Intn(100)
-				if t > 50 {
-					time.Sleep(time.Duration(t) * time.Millisecond)
-				}
+				t := rand.Intn(1000)
+				time.Sleep(time.Duration(t) * time.Millisecond)
 
 				// Retry...
 				ans := rh.SKeeper.Get(key)
