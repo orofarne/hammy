@@ -26,6 +26,8 @@ type Config struct {
 		HammyDFile string
 		// For hammydatad daemon
 		HammyDataDFile string
+		// FIXME CmdOutput
+		CmdOutputFile string
 	}
 	// Debug and statistics
 	Debug struct {

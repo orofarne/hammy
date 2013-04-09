@@ -1,11 +1,13 @@
 package hammy
 
 import (
+	"io"
 	"fmt"
 	"log"
 	"time"
 	"strings"
 	"reflect"
+	"encoding/json"
 )
 
 type CmdBufferProcessorImpl struct {
@@ -13,6 +15,8 @@ type CmdBufferProcessorImpl struct {
 	SBuffer SendBuffer
 	// Data saver
 	Saver SendBuffer
+	// FIXME Other commands
+	CmdOutput io.Writer
 }
 
 func (cbp *CmdBufferProcessorImpl) Process(key string, cmdb *CmdBuffer) error {
@@ -25,7 +29,14 @@ func (cbp *CmdBufferProcessorImpl) Process(key string, cmdb *CmdBuffer) error {
 			case "save":
 				cbp.processSave(key, c.Options)
 			default:
-				log.Printf("[%s] %s %v", key, c.Cmd, c.Options)
+				b, err := json.Marshal(c)
+				if err == nil {
+					b = append(b, '\n')
+					_, err = cbp.CmdOutput.Write(b)
+				}
+				if err != nil {
+					cbp.log(key, fmt.Sprintf("CmdOutput error: %v", err))
+				}
 		}
 	}
 
