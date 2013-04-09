@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"syscall"
 	"log"
+	"strings"
 	"github.com/ugorji/go-msgpack"
 )
 
@@ -291,6 +292,9 @@ func (e *SPExecuter) getWorker() (worker *process, err error) {
 		worker.Cmd.Stderr = &worker.PStderr
 		err = worker.Start()
 		if err != nil {
+			if strings.Contains(err.Error(), "cannot allocate memory") {
+				panic("cannot allocate memory")
+			}
 			worker.Cmd = nil
 			return
 		}

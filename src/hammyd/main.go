@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"io"
+	"bufio"
 	"runtime"
 	"flag"
 	"log"
@@ -61,6 +63,20 @@ func main() {
 
 	log.Printf("Initializing...")
 
+	var cmdOutF io.Writer
+	if cfg.Log.CmdOutputFile != "" {
+		f, err := os.OpenFile(cfg.Log.CmdOutputFile,
+			os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0666)
+
+		if err != nil {
+			log.Fatalf("Failed to open cmdoutput file: %v", err)
+		}
+
+		cmdOutF = bufio.NewWriter(f)
+	} else {
+		cmdOutF = bufio.NewWriter(os.Stdout)
+	}
+
 	go func() {
 		log.Println(http.ListenAndServe(cfg.Debug.HammyDAddr, nil))
 	}()
@@ -95,7 +111,9 @@ func main() {
 
 	e := hammy.NewSPExecuter(cfg, "spexecuter")
 
-	cbp := hammy.CmdBufferProcessorImpl{}
+	cbp := hammy.CmdBufferProcessorImpl{
+		CmdOutput: cmdOutF,
+	}
 
 	rh := hammy.RequestHandlerImpl{
 		TGetter: tg,

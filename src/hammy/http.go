@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"runtime"
 	"net/http"
 	"encoding/json"
 	"github.com/ugorji/go-msgpack"
@@ -54,6 +55,8 @@ func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.mCounter400.Add(1)
 		return
 	}
+
+	defer func() { runtime.GC() } ()
 
 	contentTypeHeader, headerFound := r.Header["Content-Type"]
 	var contentType string
