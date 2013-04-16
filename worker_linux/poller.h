@@ -23,7 +23,7 @@ void
 hammy_poller_free (hammy_poller_t p);
 
 gboolean
-hammy_poller_run (hammy_poller_t p);
+hammy_poller_run (hammy_poller_t p, GError **error);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -35,6 +35,7 @@ endif(TESTS)
 
 add_library(worker_lib STATIC
   poller.c
+  msgbuf.c
 )
 
 add_executable(hammy_worker_linux main.c)

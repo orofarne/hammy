@@ -1,11 +1,9 @@
 #include "../poller.h"
 
 #include <gtest/gtest.h>
+#include "null_asserts.hh"
 
 #include <unistd.h>
-
-#define ASSERT_NULL(p) ASSERT_EQ (NULL, (long)p)
-#define ASSERT_NOT_NULL(p) ASSERT_NE (NULL, (long)p)
 
 TEST (Poller, CreateDestroy)
 {
@@ -25,4 +23,5 @@ TEST (Poller, CreateDestroy)
 	ASSERT_NULL (err);
 
 	hammy_poller_free(poller);
+	close (pipefd[0]); close (pipefd[1]);
 }
