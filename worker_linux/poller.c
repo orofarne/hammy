@@ -4,11 +4,14 @@
 #include "glib_extra.h"
 
 #include <errno.h>
+#include <string.h>
 #include <signal.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/epoll.h>
 #include <sys/signalfd.h>
+
+#define HAMMY_DEFAULT_IBUFFER_SIZE 10240
 
 G_DEFINE_QUARK (hammy-poller-error, hammy_poller_error)
 #define E_DOMAIN hammy_poller_error_quark()
@@ -23,7 +26,6 @@ G_DEFINE_QUARK (hammy-poller-error, hammy_poller_error)
 	goto END; \
 }
 
-
 struct hammy_poller_priv
 {
 	guint pool_size;
@@ -33,6 +35,7 @@ struct hammy_poller_priv
 	int input_fd;
 	gpointer input_buf;
 	gsize input_buf_size;
+	gsize input_buf_cap;
 	GQueue *input_queue;
 
 	int sig_fd;
@@ -56,6 +59,7 @@ hammy_poller_new (struct hammy_poller_cfg *cfg, GError **error)
 	g_assert(p->pool_size > 0);
 
 	p->input_queue = g_queue_new();
+	p->input_buf = g_malloc(HAMMY_DEFAULT_IBUFFER_SIZE);
 
 	esize = p->pool_size + 2;
 	p->epollfd = epoll_create (esize);
@@ -112,9 +116,20 @@ hammy_poller_free (hammy_poller_t p)
 }
 
 static gboolean
+hammy_poller_handle_message (hammy_poller_t p, gpointer buf, gsize size, GError **error)
+{
+	// TODO
+	g_free(buf);
+	return TRUE;
+}
+
+static gboolean
 hammy_poller_handle_input (hammy_poller_t p, guint32 events, GError **error)
 {
 	GError *lerr = NULL;
+	ssize_t r;
+	gsize msg_size;
+	gpointer buf = NULL;
 
 	if (events & EPOLLERR)
 	{
@@ -128,7 +143,40 @@ hammy_poller_handle_input (hammy_poller_t p, guint32 events, GError **error)
 	}
 	if (events & EPOLLIN)
 	{
+		if (p->input_buf_size == p->input_buf_cap)
+		{
+			p->input_buf_size += HAMMY_DEFAULT_IBUFFER_SIZE;
+			p->input_buf = g_realloc (p->input_buf, p->input_buf_size);
+			g_assert (p->input_buf != NULL);
+		}
 
+		r = read (p->input_fd, p->input_buf + p->input_buf_size, p->input_buf_cap - p->input_buf_size);
+		if (r < 0)
+			ERRNO_ERR("read (input_fd)")
+		p->input_buf_size += r;
+
+		msg_size = hammy_msg_buf_read (p->input_buf, p->input_buf_size, &lerr);
+		if (msg_size == 0)
+		{
+			if (lerr != NULL)
+				goto END;
+		}
+		else
+		{
+			// Message ready
+			buf = g_memdup (p->input_buf, msg_size);
+			if (p->input_buf_size == msg_size)
+			{
+				p->input_buf_size = 0;
+			}
+			else
+			{
+				g_memmove(p->input_buf, p->input_buf + msg_size, p->input_buf_size - msg_size);
+				p->input_buf_size = p->input_buf_size - msg_size;
+			}
+			if (!hammy_poller_handle_message (p, buf, msg_size, &lerr))
+				goto END;
+		}
 	}
 
 END:
