@@ -25,7 +25,9 @@ target_link_libraries(worker_test
   ${GTEST_BOTH_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${GLIB2_LIBRARIES}
+  ${EV_LIBRARY}
   ${MOZJS_LIBRARY}
+  ${MsgPack_LIBRARIES}
 )
 
 run_test(worker_test)

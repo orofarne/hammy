@@ -1,5 +1,9 @@
+#include "router.h"
+
 #include <glib.h>
-#include "glib_extra.h"
+#include "glib_defines.h"
+
+#include <string.h>
 
 G_DEFINE_QUARK(hammy-main-error, hammy_main_error)
 #define E_DOMAIN hammy_main_error_quark()
@@ -11,6 +15,37 @@ static GOptionEntry entries[] =
 	{ "config", 'c', 0, G_OPTION_ARG_STRING, &cfg_file, "Config file path", "FILE" },
 	{ NULL }
 };
+
+gboolean
+start_router (GKeyFile *cfg_kv, _H_AERR)
+{
+	FUNC_BEGIN()
+	hammy_router_t router = NULL;
+	struct hammy_router_cfg cfg;
+
+	memset(&cfg, sizeof(cfg), 0);
+
+	cfg.sock_path = g_key_file_get_string (cfg_kv, "worker", "sock_path", ERR_RETURN);
+	H_ASSERT_ERROR
+	cfg.sock_backlog = g_key_file_get_uint64 (cfg_kv, "worker", "sock_backlog", ERR_RETURN);
+	H_ASSERT_ERROR
+	cfg.max_workers = g_key_file_get_uint64 (cfg_kv, "worker", "max_workers", ERR_RETURN);
+	H_ASSERT_ERROR
+
+	router = hammy_router_new (&cfg, ERR_RETURN);
+	if (router == NULL)
+		GOTO_END
+
+	if (!hammy_router_run (router, ERR_RETURN))
+		GOTO_END
+
+	FUNC_END(
+		if (cfg.sock_path != NULL)
+			g_free (cfg.sock_path);
+		if (router != NULL)
+			hammy_router_free (router);
+	)
+}
 
 int
 main (int argc, char *argv[])
@@ -42,7 +77,8 @@ main (int argc, char *argv[])
 		goto END;
 	}
 
-	// TODO
+	if (!start_router(cfg_kv, &error))
+		goto END;
 
 	rc = 0;
 END:

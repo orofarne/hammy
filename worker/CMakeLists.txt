@@ -37,7 +37,12 @@ endif(TESTS)
 
 add_library(worker_lib STATIC
   msgbuf.c
+  router.c
+  worker.c
   eval.cc
+  child.cc
+  child_bridge.cc
+  fwriter.cc
 )
 
 add_executable(hammy_worker main.c)
@@ -47,5 +52,7 @@ add_dependencies(hammy_worker
 target_link_libraries(hammy_worker
   worker_lib
   ${GLIB2_LIBRARIES}
+  ${EV_LIBRARY}
   ${MOZJS_LIBRARY}
+  ${MsgPack_LIBRARIES}
 )
