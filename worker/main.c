@@ -78,7 +78,10 @@ main (int argc, char *argv[])
 	}
 
 	if (!start_router(cfg_kv, &error))
+	{
+		g_print ("failed to start router: %s\n", error->message);
 		goto END;
+	}
 
 	rc = 0;
 END:

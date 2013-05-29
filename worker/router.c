@@ -5,6 +5,7 @@
 #include "glib_defines.h"
 
 #include <string.h>
+#include <sys/param.h> // MAXPATHLEN
 
 // Network Stuff
 #include <sys/types.h>
@@ -291,6 +292,8 @@ hammy_router_unix_socket_init (hammy_router_t self, _H_AERR)
 
 	// Set it non-blocking
 	H_TRY (hammy_router_setnonblock (fd, ERR_RETURN))
+
+	g_assert (strlen (self->sock_path) <=  MAXPATHLEN);
 
 	// Set it as unix socket
 	self->socket_un.sun_family = AF_UNIX;
