@@ -68,6 +68,7 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 	msgpack::object *Trigger = NULL;
 	msgpack::object *State = NULL;
 	msgpack::object *IData = NULL;
+	m_id = 0;
 
 	ASSERTPP(msg.type == msgpack::type::MAP);
 	for(uint32_t i = 0; i < msg.via.map.size; ++i) {
@@ -84,6 +85,9 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 			State = &kv.val;
 		} else if (0 == strncmp(kv.key.via.raw.ptr, "IData", 5)) {
 			IData = &kv.val;
+		} else if (0 == strncmp(kv.key.via.raw.ptr, "Id", 2)) {
+			ASSERTPP(kv.val.type == msgpack::type::POSITIVE_INTEGER);
+			m_id = kv.val.via.u64;
 		}
 	}
 	ASSERTPP(Hostname && Trigger && State && IData);
@@ -102,7 +106,9 @@ void Worker::process_message(msgpack::object msg, auto_zone& life) {
 	process_data(IData);
 
 	// Answer
-	m_pack.pack_map(2);
+	m_pack.pack_map(3);
+	m_pack.pack(std::string("Id"));
+	m_pack.pack(m_id);
 	write_cmdbuf();
 	write_state();
 
@@ -171,7 +177,7 @@ void Worker::process_data(msgpack::object *obj) {
 	 * }
 	 *
 	 * type IncomingHostData map[string][]IncomingValueData
-	*/
+	 */
 
 	ASSERTPP(obj->type == msgpack::type::MAP);
 	for(uint32_t i = 0; i < obj->via.map.size; ++i) {

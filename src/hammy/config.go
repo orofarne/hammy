@@ -39,13 +39,9 @@ type Config struct {
 		HammyDataDAddr string
 	}
 	// Workers
-	Workers struct {
-		// Count of workers
-		PoolSize uint
-		// Worker cmd
-		CmdLine string
-		// Worker live limit
-		MaxIter uint
+	Worker struct {
+		// Worker router socket
+		SocketPath string
 		// Worker timeout (before kill)
 		Timeout uint
 	}
@@ -183,95 +179,185 @@ type Config struct {
 // Returns an error if mandatory field omited
 func SetConfigDefaults(cfg *Config) error {
 	// Section [IncomingHttp]
-	if cfg.IncomingHttp.Addr == "" { cfg.IncomingHttp.Addr = ":4000" }
+	if cfg.IncomingHttp.Addr == "" {
+		cfg.IncomingHttp.Addr = ":4000"
+	}
 
 	// Section [DataHttp]
-	if cfg.DataHttp.Addr == "" { cfg.DataHttp.Addr = ":4001" }
-	if cfg.DataHttp.Prefix == "" { cfg.DataHttp.Prefix = "/data" }
+	if cfg.DataHttp.Addr == "" {
+		cfg.DataHttp.Addr = ":4001"
+	}
+	if cfg.DataHttp.Prefix == "" {
+		cfg.DataHttp.Prefix = "/data"
+	}
 
 	// Section [Log]
 
 	// Section [Debug]
-	if cfg.Debug.HammyDAddr == "" { cfg.Debug.HammyDAddr = "localhost:6060" }
-	if cfg.Debug.HammyDataDAddr == "" { cfg.Debug.HammyDataDAddr = "localhost:6061" }
+	if cfg.Debug.HammyDAddr == "" {
+		cfg.Debug.HammyDAddr = "localhost:6060"
+	}
+	if cfg.Debug.HammyDataDAddr == "" {
+		cfg.Debug.HammyDataDAddr = "localhost:6061"
+	}
 
 	// Section [SendBuffer]
-	if cfg.SendBuffer.SleepTime == 0.0 { cfg.SendBuffer.SleepTime = 10.0 }
+	if cfg.SendBuffer.SleepTime == 0.0 {
+		cfg.SendBuffer.SleepTime = 10.0
+	}
 
-	// Section [Workers]
-	if cfg.Workers.PoolSize == 0 { cfg.Workers.PoolSize = 5 }
-	if cfg.Workers.CmdLine == "" { return fmt.Errorf("Empty cfg.Workers.CmdLine") }
-	if cfg.Workers.MaxIter == 0 { cfg.Workers.MaxIter = 1000 }
-	if cfg.Workers.Timeout == 0 { cfg.Workers.Timeout = 1 }
+	// Section [Worker]
+	if cfg.Worker.SocketPath == "" {
+		return fmt.Errorf("Empty cfg.Worker.SocketPath")
+	}
+	if cfg.Worker.Timeout == 0 {
+		cfg.Worker.Timeout = 1
+	}
 
 	// Section [CouchbaseTriggers]
 	if cfg.CouchbaseTriggers.Active {
-		if cfg.CouchbaseTriggers.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseTriggers.ConnectTo") }
-		if cfg.CouchbaseTriggers.Pool == "" { cfg.CouchbaseTriggers.Pool = "default" }
-		if cfg.CouchbaseTriggers.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseTriggers.Bucket") }
+		if cfg.CouchbaseTriggers.ConnectTo == "" {
+			return fmt.Errorf("Empty cfg.CouchbaseTriggers.ConnectTo")
+		}
+		if cfg.CouchbaseTriggers.Pool == "" {
+			cfg.CouchbaseTriggers.Pool = "default"
+		}
+		if cfg.CouchbaseTriggers.Bucket == "" {
+			return fmt.Errorf("Empty cfg.CouchbaseTriggers.Bucket")
+		}
 	}
 
 	// Section [CouchbaseStates]
 	if cfg.CouchbaseStates.Active {
-		if cfg.CouchbaseStates.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseStates.ConnectTo") }
-		if cfg.CouchbaseStates.Pool == "" { cfg.CouchbaseStates.Pool = "default" }
-		if cfg.CouchbaseStates.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseStates.Bucket") }
-		if cfg.CouchbaseStates.Ttl == 0 { cfg.CouchbaseStates.Ttl = 86400 }
+		if cfg.CouchbaseStates.ConnectTo == "" {
+			return fmt.Errorf("Empty cfg.CouchbaseStates.ConnectTo")
+		}
+		if cfg.CouchbaseStates.Pool == "" {
+			cfg.CouchbaseStates.Pool = "default"
+		}
+		if cfg.CouchbaseStates.Bucket == "" {
+			return fmt.Errorf("Empty cfg.CouchbaseStates.Bucket")
+		}
+		if cfg.CouchbaseStates.Ttl == 0 {
+			cfg.CouchbaseStates.Ttl = 86400
+		}
 	}
 
 	// Section [CouchbaseSaver]
 	if cfg.CouchbaseSaver.Active {
-		if cfg.CouchbaseSaver.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseSaver.ConnectTo") }
-		if cfg.CouchbaseSaver.Pool == "" { cfg.CouchbaseSaver.Pool = "default" }
-		if cfg.CouchbaseSaver.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseSaver.Bucket") }
-		if cfg.CouchbaseSaver.QueueSize == 0 { cfg.CouchbaseSaver.QueueSize = 10000 }
-		if cfg.CouchbaseSaver.SavePoolSize == 0 { cfg.CouchbaseSaver.SavePoolSize = 10 }
-		if cfg.CouchbaseSaver.Ttl == 0 { cfg.CouchbaseSaver.Ttl = 259200 }
+		if cfg.CouchbaseSaver.ConnectTo == "" {
+			return fmt.Errorf("Empty cfg.CouchbaseSaver.ConnectTo")
+		}
+		if cfg.CouchbaseSaver.Pool == "" {
+			cfg.CouchbaseSaver.Pool = "default"
+		}
+		if cfg.CouchbaseSaver.Bucket == "" {
+			return fmt.Errorf("Empty cfg.CouchbaseSaver.Bucket")
+		}
+		if cfg.CouchbaseSaver.QueueSize == 0 {
+			cfg.CouchbaseSaver.QueueSize = 10000
+		}
+		if cfg.CouchbaseSaver.SavePoolSize == 0 {
+			cfg.CouchbaseSaver.SavePoolSize = 10
+		}
+		if cfg.CouchbaseSaver.Ttl == 0 {
+			cfg.CouchbaseSaver.Ttl = 259200
+		}
 	}
 
 	// Section [CouchbaseDataReader]
 	if cfg.CouchbaseDataReader.Active {
-		if cfg.CouchbaseDataReader.ConnectTo == "" { return fmt.Errorf("Empty cfg.CouchbaseDataReader.ConnectTo") }
-		if cfg.CouchbaseDataReader.Pool == "" { cfg.CouchbaseDataReader.Pool = "default" }
-		if cfg.CouchbaseDataReader.Bucket == "" { return fmt.Errorf("Empty cfg.CouchbaseDataReader.Bucket") }
+		if cfg.CouchbaseDataReader.ConnectTo == "" {
+			return fmt.Errorf("Empty cfg.CouchbaseDataReader.ConnectTo")
+		}
+		if cfg.CouchbaseDataReader.Pool == "" {
+			cfg.CouchbaseDataReader.Pool = "default"
+		}
+		if cfg.CouchbaseDataReader.Bucket == "" {
+			return fmt.Errorf("Empty cfg.CouchbaseDataReader.Bucket")
+		}
 	}
 
 	// Section [MySQLTriggers]
 	if cfg.MySQLTriggers.Active {
-		if cfg.MySQLTriggers.Database == "" { return fmt.Errorf("Empty cfg.MySQLTriggers.Database") }
-		if cfg.MySQLTriggers.User == "" { return fmt.Errorf("Empty cfg.MySQLTriggers.User") }
-		if cfg.MySQLTriggers.Table == "" { return fmt.Errorf("Empty cfg.MySQLTriggers.Table") }
-		if cfg.MySQLTriggers.MaxConn == 0 { cfg.MySQLTriggers.MaxConn = 10 }
+		if cfg.MySQLTriggers.Database == "" {
+			return fmt.Errorf("Empty cfg.MySQLTriggers.Database")
+		}
+		if cfg.MySQLTriggers.User == "" {
+			return fmt.Errorf("Empty cfg.MySQLTriggers.User")
+		}
+		if cfg.MySQLTriggers.Table == "" {
+			return fmt.Errorf("Empty cfg.MySQLTriggers.Table")
+		}
+		if cfg.MySQLTriggers.MaxConn == 0 {
+			cfg.MySQLTriggers.MaxConn = 10
+		}
 	}
 
 	// Section [MySQLStates]
 	if cfg.MySQLStates.Active {
-		if cfg.MySQLStates.Database == "" { return fmt.Errorf("Empty cfg.MySQLStates.Database") }
-		if cfg.MySQLStates.User == "" { return fmt.Errorf("Empty cfg.MySQLStates.User") }
-		if cfg.MySQLStates.Table == "" { return fmt.Errorf("Empty cfg.MySQLStates.Table") }
-		if cfg.MySQLStates.MaxConn == 0 { cfg.MySQLStates.MaxConn = 10 }
+		if cfg.MySQLStates.Database == "" {
+			return fmt.Errorf("Empty cfg.MySQLStates.Database")
+		}
+		if cfg.MySQLStates.User == "" {
+			return fmt.Errorf("Empty cfg.MySQLStates.User")
+		}
+		if cfg.MySQLStates.Table == "" {
+			return fmt.Errorf("Empty cfg.MySQLStates.Table")
+		}
+		if cfg.MySQLStates.MaxConn == 0 {
+			cfg.MySQLStates.MaxConn = 10
+		}
 	}
 
 	// Section [MySQLSaver]
 	if cfg.MySQLSaver.Active {
-		if cfg.MySQLSaver.Database == "" { return fmt.Errorf("Empty cfg.MySQLSaver.Database") }
-		if cfg.MySQLSaver.User == "" { return fmt.Errorf("Empty cfg.MySQLSaver.User") }
-		if cfg.MySQLSaver.Table == "" { return fmt.Errorf("Empty cfg.MySQLSaver.Table") }
-		if cfg.MySQLSaver.LogTable == "" { return fmt.Errorf("Empty cfg.MySQLSaver.LogTable") }
-		if cfg.MySQLSaver.HostTable == "" { return fmt.Errorf("Empty cfg.MySQLSaver.HostTable") }
-		if cfg.MySQLSaver.ItemTable == "" { return fmt.Errorf("Empty cfg.MySQLSaver.ItemTable") }
-		if cfg.MySQLSaver.MaxConn == 0 { cfg.MySQLSaver.MaxConn = 10 }
+		if cfg.MySQLSaver.Database == "" {
+			return fmt.Errorf("Empty cfg.MySQLSaver.Database")
+		}
+		if cfg.MySQLSaver.User == "" {
+			return fmt.Errorf("Empty cfg.MySQLSaver.User")
+		}
+		if cfg.MySQLSaver.Table == "" {
+			return fmt.Errorf("Empty cfg.MySQLSaver.Table")
+		}
+		if cfg.MySQLSaver.LogTable == "" {
+			return fmt.Errorf("Empty cfg.MySQLSaver.LogTable")
+		}
+		if cfg.MySQLSaver.HostTable == "" {
+			return fmt.Errorf("Empty cfg.MySQLSaver.HostTable")
+		}
+		if cfg.MySQLSaver.ItemTable == "" {
+			return fmt.Errorf("Empty cfg.MySQLSaver.ItemTable")
+		}
+		if cfg.MySQLSaver.MaxConn == 0 {
+			cfg.MySQLSaver.MaxConn = 10
+		}
 	}
 
 	// Section [MySQLDataReader]
 	if cfg.MySQLDataReader.Active {
-		if cfg.MySQLDataReader.Database == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.Database") }
-		if cfg.MySQLDataReader.User == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.User") }
-		if cfg.MySQLDataReader.Table == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.Table") }
-		if cfg.MySQLDataReader.LogTable == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.LogTable") }
-		if cfg.MySQLDataReader.HostTable == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.HostTable") }
-		if cfg.MySQLDataReader.ItemTable == "" { return fmt.Errorf("Empty cfg.MySQLDataReader.ItemTable") }
-		if cfg.MySQLDataReader.MaxConn == 0 { cfg.MySQLDataReader.MaxConn = 10 }
+		if cfg.MySQLDataReader.Database == "" {
+			return fmt.Errorf("Empty cfg.MySQLDataReader.Database")
+		}
+		if cfg.MySQLDataReader.User == "" {
+			return fmt.Errorf("Empty cfg.MySQLDataReader.User")
+		}
+		if cfg.MySQLDataReader.Table == "" {
+			return fmt.Errorf("Empty cfg.MySQLDataReader.Table")
+		}
+		if cfg.MySQLDataReader.LogTable == "" {
+			return fmt.Errorf("Empty cfg.MySQLDataReader.LogTable")
+		}
+		if cfg.MySQLDataReader.HostTable == "" {
+			return fmt.Errorf("Empty cfg.MySQLDataReader.HostTable")
+		}
+		if cfg.MySQLDataReader.ItemTable == "" {
+			return fmt.Errorf("Empty cfg.MySQLDataReader.ItemTable")
+		}
+		if cfg.MySQLDataReader.MaxConn == 0 {
+			cfg.MySQLDataReader.MaxConn = 10
+		}
 	}
 
 	// Counts
@@ -279,8 +365,12 @@ func SetConfigDefaults(cfg *Config) error {
 	{
 		k := 0
 
-		if cfg.CouchbaseTriggers.Active { k++ }
-		if cfg.MySQLTriggers.Active { k++ }
+		if cfg.CouchbaseTriggers.Active {
+			k++
+		}
+		if cfg.MySQLTriggers.Active {
+			k++
+		}
 
 		if k != 1 {
 			return fmt.Errorf("Invalid count of active TriggersGetter drivers: %d", k)
@@ -290,8 +380,12 @@ func SetConfigDefaults(cfg *Config) error {
 	{
 		k := 0
 
-		if cfg.CouchbaseStates.Active { k++ }
-		if cfg.MySQLStates.Active { k++ }
+		if cfg.CouchbaseStates.Active {
+			k++
+		}
+		if cfg.MySQLStates.Active {
+			k++
+		}
 
 		if k != 1 {
 			return fmt.Errorf("Invalid count of active StateKeeper drivers: %d", k)
@@ -301,8 +395,12 @@ func SetConfigDefaults(cfg *Config) error {
 	{
 		k := 0
 
-		if cfg.CouchbaseSaver.Active { k++ }
-		if cfg.MySQLSaver.Active { k++ }
+		if cfg.CouchbaseSaver.Active {
+			k++
+		}
+		if cfg.MySQLSaver.Active {
+			k++
+		}
 
 		if k != 1 {
 			return fmt.Errorf("Invalid count of active DataSaver drivers: %d", k)
@@ -312,8 +410,12 @@ func SetConfigDefaults(cfg *Config) error {
 	{
 		k := 0
 
-		if cfg.CouchbaseDataReader.Active { k++ }
-		if cfg.MySQLDataReader.Active { k++ }
+		if cfg.CouchbaseDataReader.Active {
+			k++
+		}
+		if cfg.MySQLDataReader.Active {
+			k++
+		}
 
 		if k != 1 {
 			return fmt.Errorf("Invalid count of active DataReader drivers: %d", k)

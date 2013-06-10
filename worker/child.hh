@@ -3,6 +3,7 @@
 #include "fwriter.hh"
 #include "eval.hh"
 
+#include <stdint.h>
 #include <msgpack.hpp>
 
 namespace hammy {
@@ -27,6 +28,7 @@ class Worker {
 	private:
 		int m_in_sock;
 		int m_out_sock;
+		uint64_t m_id;
 		msgpack::unpacker m_unpack;
 		FWriter fw;
 		msgpack::packer<FWriter> m_pack;

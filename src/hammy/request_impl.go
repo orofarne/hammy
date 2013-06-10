@@ -143,7 +143,7 @@ func (rh *RequestHandlerImpl) processTrigger(
 		c <- ret
 	}()
 //
-	newState, cmdb, err := rh.Exec.ProcessTrigger(key, trigger, &state, data)
+	newState, cmdb, err := rh.Exec.ProcessTrigger(key, trigger, &state, *cas, data)
 	if err != nil {
 		ret.Err = fmt.Errorf("Trigger processor error: %v", err)
 		rh.logErr(key, err.Error())
@@ -177,7 +177,7 @@ func (rh *RequestHandlerImpl) processTrigger(
 				state = ans.State
 				cas = ans.Cas
 
-				newState, cmdb, err = rh.Exec.ProcessTrigger(key, trigger, &state, data)
+				newState, cmdb, err = rh.Exec.ProcessTrigger(key, trigger, &state, *cas, data)
 				if err != nil {
 					ret.Err = fmt.Errorf("Trigger processor error: %v", err)
 					rh.logErr(key, err.Error())

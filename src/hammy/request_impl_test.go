@@ -71,8 +71,8 @@ func (sk *StateKeeperTestImpl) Set(key string, data State, cas *uint64) (retry b
 type ExecuterTestImpl struct {
 }
 
-func (e *ExecuterTestImpl) ProcessTrigger(key string, trigger string,
-	state *State, data IncomingHostData) (newState *State, cmdb *CmdBuffer, err error) {
+func (e *ExecuterTestImpl) ProcessTrigger(key string, trigger string, state *State, cas uint64,
+	data IncomingHostData) (newState *State, cmdb *CmdBuffer, err error) {
 //
 	desired_trigger := fmt.Sprintf("Trigger for key '%s'", key)
 	if trigger != desired_trigger {

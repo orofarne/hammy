@@ -14,7 +14,7 @@ func TestSetConfigDefaults(t *testing.T) {
 	}
 
 	// Mandatory fields:
-	cfg.Workers.CmdLine = "/bin/ls"
+	cfg.Worker.SocketPath = "/tmp/hammy_worker.socket"
 	cfg.CouchbaseTriggers.ConnectTo = "http://localhost:8091/"
 	cfg.CouchbaseTriggers.Bucket = "default"
 	cfg.CouchbaseStates.ConnectTo = "http://localhost:8091/"
