@@ -199,7 +199,8 @@ func (e *WExecuter) sender() {
 }
 
 func (e *WExecuter) receiver() {
-	for {
+	run := true
+	for run {
 		cmdb := NewCmdBuffer(0)
 		newState := NewState()
 		out := WorkerOutput{
@@ -210,6 +211,16 @@ func (e *WExecuter) receiver() {
 		// wait, read and unmarshal result
 		dec := msgpack.NewDecoder(e.conn, nil)
 		err := dec.Decode(&out)
+
+		if err.Error() == "EOF" {
+			e.conn.Close()
+			e.conn = nil
+			run = false
+			if out.Id == 0 {
+				break
+			} // Propagate error otherwise
+		}
+
 		res := WorkerAns{
 			Data: &out,
 			Err:  err,
