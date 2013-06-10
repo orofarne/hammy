@@ -4,10 +4,9 @@ Addr = "localhost:4000"
 [DataHttp]
 Addr = "localhost:4001"
 
-[Workers]
-PoolSize = 1
-MaxIter = 100
-CmdLine = "worker/build/worker"
+[Worker]
+SocketPath = /tmp/hammy_worker.socket
+Timeout = 1
 
 [MySQLTriggers]
 Active = true

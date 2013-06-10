@@ -109,7 +109,7 @@ func main() {
 		}
 	}
 
-	e := hammy.NewSPExecuter(cfg, "spexecuter")
+	e := hammy.NewWExecuter(cfg, "wexecuter")
 
 	cbp := hammy.CmdBufferProcessorImpl{
 		CmdOutput: cmdOutF,

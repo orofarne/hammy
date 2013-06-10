@@ -58,6 +58,8 @@ func NewWExecuter(cfg Config, metricNamespace string) *WExecuter {
 
 	e := new(WExecuter)
 
+	e.socketPath = cfg.Worker.SocketPath
+
 	e.reqChan = make(chan *WorkerReq)
 	e.rcvChan = make(chan *WorkerAns)
 	e.rTable = make(map[uint64]*WorkerReq)
@@ -67,7 +69,7 @@ func NewWExecuter(cfg Config, metricNamespace string) *WExecuter {
 	e.mErrors = e.ms.NewCounter("errors")
 	e.mTimeouts = e.ms.NewCounter("timeouts")
 
-	go e.receiver()
+	go e.sender()
 	go e.reader()
 
 	return e
@@ -79,6 +81,8 @@ func (e *WExecuter) connect() error {
 	if err != nil {
 		return err
 	}
+
+	go e.receiver()
 
 	return nil
 }
@@ -167,8 +171,6 @@ func (e *WExecuter) sender() {
 				time.Sleep(time.Millisecond);
 				continue
 			}
-			// Read from socket
-			go e.reader()
 		}
 
 		buf, err := msgpack.Marshal(req.Data)
