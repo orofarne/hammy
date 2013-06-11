@@ -112,7 +112,7 @@ hammy_router_setnonblock(int fd, _H_AERR)
 
 // We have a new task for worker
 static gboolean
-hammy_router_touch_worker (hammy_router_t self, _H_AERR)
+hammy_router_touch_worker (hammy_router_t self, struct hammy_router_task *task, _H_AERR)
 {
 	GError *lerr = NULL;
 	guint i;
@@ -123,6 +123,7 @@ hammy_router_touch_worker (hammy_router_t self, _H_AERR)
 	{
 		if (!hammy_worker_is_busy ((hammy_worker_t)self->workers->pdata[i]))
 		{
+
 			// TODO
 			g_warning ("TODO %d", __LINE__);
 			return TRUE;
@@ -147,14 +148,14 @@ hammy_router_touch_workers (hammy_router_t self, _H_AERR)
 		if (task == NULL)
 			break;
 
-		if (!hammy_router_touch_worker (self, ERR_RETURN))
+		if (!hammy_router_touch_worker (self, task, ERR_RETURN))
 		{
 			H_ASSERT_ERROR
 
 			if (self->workers->len < self->max_workers)
 			{
 				// Create new worker
-				hammy_worker_t w = hammy_worker_new (ERR_RETURN);
+				hammy_worker_t w = hammy_worker_new (self->loop, ERR_RETURN);
 				g_ptr_array_add (self->workers, w);
 				// Return task to queue
 				g_queue_push_head (self->tasks, task);
@@ -162,6 +163,7 @@ hammy_router_touch_workers (hammy_router_t self, _H_AERR)
 			}
 			else
 			{
+				// No free workers
 				// Return task to queue
 				g_queue_push_head (self->tasks, task);
 				break;
