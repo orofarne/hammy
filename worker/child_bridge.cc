@@ -15,13 +15,13 @@ struct hammy_child_priv
 
 extern "C"
 hammy_child_t
-hammy_child_new (int in_sock, int out_sock, GError **error)
+hammy_child_new (struct ev_loop *loop, int in_sock, int out_sock, GError **error)
 {
 	GError *lerr = NULL;
 	try
 	{
 		hammy_child_t self  = new struct hammy_child_priv ();
-		self->w = new hammy::Worker (in_sock, out_sock);
+		self->w = new hammy::Worker (loop, in_sock, out_sock);
 		return self;
 	}
 	catch (std::exception const &e)

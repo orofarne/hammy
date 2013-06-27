@@ -13,8 +13,9 @@
 
 namespace hammy {
 
-Worker::Worker(int in_sock, int out_sock)
-	: m_in_sock(in_sock)
+Worker::Worker(struct ev_loop *loop, int in_sock, int out_sock)
+	: m_loop(loop)
+	, m_in_sock(in_sock)
 	, m_out_sock(out_sock)
 	, fw(m_out_sock)
 	, m_pack(fw)
@@ -26,9 +27,14 @@ Worker::~Worker() {
 }
 
 void Worker::socket_readable() {
+
+	std::cerr << __FILE__ << ':' << __LINE__ << ": " << "Worker::socket_readable()" << std::endl; // DEBUG
+
 	m_unpack.reserve_buffer(1024);
 
 	ssize_t count = read(m_in_sock, m_unpack.buffer(), m_unpack.buffer_capacity());
+
+	std::cerr << __FILE__ << ':' << __LINE__ << ": " << count << " bytes" << std::endl; // DEBUG
 
 	if(count <= 0) {
 		if(count == 0) {
@@ -43,6 +49,9 @@ void Worker::socket_readable() {
 	m_unpack.buffer_consumed(count);
 
 	while(m_unpack.execute()) {
+
+		std::cerr << __FILE__ << ':' << __LINE__ << ": " << "new message" << std::endl; // DEBUG
+
 		msgpack::object msg = m_unpack.data();
 
 		auto_zone life( m_unpack.release_zone() );
@@ -58,9 +67,13 @@ void Worker::socket_readable() {
 }
 
 void Worker::run() {
-	while(true) {
-		socket_readable();
-	}
+	std::cerr << __FILE__ << ':' << __LINE__ << ": " << __FUNCTION__ << std::endl; // DEBUG
+
+	// Set up libev for new child read events
+	m_io.data = this;
+	ev_io_init (&m_io, &Worker::read_cb, m_in_sock, EV_READ);
+	ev_io_start (m_loop, &m_io);
+	ev_run (m_loop, 0);
 }
 
 void Worker::process_message(msgpack::object msg, auto_zone& life) {
@@ -210,6 +223,12 @@ void Worker::process_data(msgpack::object *obj) {
 			}
 		}
 	}
+}
+
+void Worker::read_cb (struct ev_loop *loop, ev_io *w, int revents) {
+	Worker *obj = (Worker *)w->data;
+
+	obj->socket_readable();
 }
 
 }

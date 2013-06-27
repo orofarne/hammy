@@ -212,7 +212,7 @@ func (e *WExecuter) receiver() {
 		dec := msgpack.NewDecoder(e.conn, nil)
 		err := dec.Decode(&out)
 
-		if err.Error() == "EOF" {
+		if err != nil && err.Error() == "EOF" {
 			e.conn.Close()
 			e.conn = nil
 			run = false

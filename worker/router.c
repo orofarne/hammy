@@ -110,6 +110,29 @@ hammy_router_setnonblock(int fd, _H_AERR)
 	FUNC_END()
 }
 
+// worker done
+static gboolean
+hammy_router_worker_cb (gpointer private, gpointer data, gsize data_size, GError **error)
+{
+	FUNC_BEGIN()
+
+	ssize_t rc;
+
+	struct hammy_router_task *task = (struct hammy_router_task *)private;
+
+	g_free (task->data);
+
+	task->data = data;
+	task->data_size = data_size;
+
+	//FIXME:
+	rc = write (task->client->fd, task->data, task->data_size);
+	if (rc < 0)
+		ERRNO_ERR ("write");
+
+	FUNC_END()
+}
+
 // We have a new task for worker
 static gboolean
 hammy_router_touch_worker (hammy_router_t self, struct hammy_router_task *task, _H_AERR)
@@ -121,11 +144,12 @@ hammy_router_touch_worker (hammy_router_t self, struct hammy_router_task *task, 
 
 	for (i = 0; i < self->workers->len; ++i)
 	{
-		if (!hammy_worker_is_busy ((hammy_worker_t)self->workers->pdata[i]))
+		hammy_worker_t worker = (hammy_worker_t)self->workers->pdata[i];
+		if (!hammy_worker_is_busy (worker))
 		{
+			if (!hammy_worker_task (worker, task->data, task->data_size, &hammy_router_worker_cb, task, ERR_RETURN))
+				break;
 
-			// TODO
-			g_warning ("TODO %d", __LINE__);
 			return TRUE;
 		}
 	}
@@ -210,6 +234,7 @@ hammy_router_client_cb (struct ev_loop *loop, ev_io *w, int revents)
 	if (m > 0)
 	{
 		task = g_new0 (struct hammy_router_task, 1);
+		task->client = client;
 		task->data = g_memdup (client->buffer, m);
 		task->data_size = m;
 		g_queue_push_tail (client->server->tasks, task);

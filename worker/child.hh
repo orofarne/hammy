@@ -5,12 +5,13 @@
 
 #include <stdint.h>
 #include <msgpack.hpp>
+#include <ev.h>
 
 namespace hammy {
 
 class Worker {
 	public:
-		Worker(int in_sock, int out_sock);
+		Worker(struct ev_loop *loop, int in_sock, int out_sock);
 		~Worker();
 
 		void run();
@@ -25,7 +26,11 @@ class Worker {
 		void write_cmdbuf();
 		void process_data(msgpack::object *obj);
 
+		static void read_cb (struct ev_loop *loop, ev_io *w, int revents);
+
 	private:
+		struct ev_loop *m_loop;
+		ev_io m_io;
 		int m_in_sock;
 		int m_out_sock;
 		uint64_t m_id;
