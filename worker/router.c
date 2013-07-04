@@ -140,8 +140,6 @@ hammy_router_touch_worker (hammy_router_t self, struct hammy_router_task *task, 
 	GError *lerr = NULL;
 	guint i;
 
-	g_warning ("touch...");
-
 	for (i = 0; i < self->workers->len; ++i)
 	{
 		hammy_worker_t worker = (hammy_worker_t)self->workers->pdata[i];
@@ -211,14 +209,19 @@ hammy_router_client_cb (struct ev_loop *loop, ev_io *w, int revents)
 	n = recv(client->fd, client->buffer, client->buffer_capacity, MSG_DONTWAIT);
 	if (n < 0)
 	{
-		// TODO: handle error
-		g_error ("n = %d, err: %s", n, strerror(errno));
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			g_warning ("(errno == EAGAIN || errno == EWOULDBLOCK)"); // DEBUG
+			return; // Wait for data
+		}
+		else
+		{
+			// TODO: handle error
+			g_error ("hammy_router_client_cb recv: n = %d, err: [%d] %s", n, errno, strerror(errno));
+		}
 	}
 	if (n == 0)
 	{
 		// an orderly disconnect
-		g_warning ("disconnected"); // FIXME
-
 		client->server->clients = g_slist_remove (client->server->clients, client);
 		hammy_router_client_free (client);
 		return;

@@ -76,8 +76,6 @@ hammy_worker_from_cb (struct ev_loop *loop, ev_io *w, int revents)
 	GError *err = NULL;
 	hammy_worker_t self = (hammy_worker_t)w->data;
 
-	g_warning ("hammy_worker_from_cb");
-
 	if (self->output_data_size == self->output_data_capacity) {
 		self->output_data_capacity = self->output_data_capacity * 2 + HAMMY_WORKER_DEF_BUFF_SIZE;
 		self->output_data = g_realloc (self->output_data, self->output_data_capacity);
@@ -99,7 +97,6 @@ hammy_worker_from_cb (struct ev_loop *loop, ev_io *w, int revents)
 		if (err != NULL)
 			g_error ("hammy_msg_buf_read: %s", err->message);
 
-		g_warning ("Wait for more data"); // DEBUG
 		return; // Wait for more data
 	}
 
@@ -109,8 +106,6 @@ hammy_worker_from_cb (struct ev_loop *loop, ev_io *w, int revents)
 	}
 
 	// Process answer
-	g_warning ("Got answer!"); // DEBUG
-
 	if (!hammy_worker_task_done (self, &err))
 		g_error ("hammy_worker_task_done: %s", err->message);
 
@@ -170,6 +165,8 @@ hammy_worker_fork (hammy_worker_t self, _H_AERR)
 	if (pid == 0)
 	{
 		ev_loop_fork (self->loop);
+		ev_loop_destroy (self->loop);
+		self->loop = ev_default_loop (EVFLAG_AUTO);
 
 		if (!hammy_worker_child (self, ERR_RETURN))
 		{
@@ -179,8 +176,6 @@ hammy_worker_fork (hammy_worker_t self, _H_AERR)
 	}
 	else
 	{
-		g_warning ("pid = %d", pid); // DEBUG
-
 		self->pid = pid;
 	}
 
@@ -193,8 +188,6 @@ hammy_worker_new (struct ev_loop *loop, GError **error)
 	GError *lerr = NULL;
 
 	struct hammy_worker_priv *self = g_new0 (struct hammy_worker_priv, 1);
-
-	g_warning ("new worker"); // DEBUG
 
 	g_assert (loop != NULL);
 	self->loop = loop;
@@ -258,7 +251,6 @@ hammy_worker_task (hammy_worker_t self, gpointer data, gsize data_size, hammy_wo
 
 	// Try to write data immediately
 	rc = write (self->to_pfd[1], data, data_size);
-	g_warning ("Worker: Sent %d bytes", (int)rc); // DEBUG
 	if (rc < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
 		// We can't write data immediately
 		self->input_data = data;
@@ -271,7 +263,6 @@ hammy_worker_task (hammy_worker_t self, gpointer data, gsize data_size, hammy_wo
 	}
 
 	if (rc < 0) {
-		g_warning("%s", g_strerror(errno)); // DEBUG
 		ERRNO_ERR ("hammy_worker send");
 	}
 

@@ -27,14 +27,9 @@ Worker::~Worker() {
 }
 
 void Worker::socket_readable() {
-
-	std::cerr << __FILE__ << ':' << __LINE__ << ": " << "Worker::socket_readable()" << std::endl; // DEBUG
-
 	m_unpack.reserve_buffer(1024);
 
 	ssize_t count = read(m_in_sock, m_unpack.buffer(), m_unpack.buffer_capacity());
-
-	std::cerr << __FILE__ << ':' << __LINE__ << ": " << count << " bytes" << std::endl; // DEBUG
 
 	if(count <= 0) {
 		if(count == 0) {
@@ -49,9 +44,6 @@ void Worker::socket_readable() {
 	m_unpack.buffer_consumed(count);
 
 	while(m_unpack.execute()) {
-
-		std::cerr << __FILE__ << ':' << __LINE__ << ": " << "new message" << std::endl; // DEBUG
-
 		msgpack::object msg = m_unpack.data();
 
 		auto_zone life( m_unpack.release_zone() );
@@ -67,8 +59,6 @@ void Worker::socket_readable() {
 }
 
 void Worker::run() {
-	std::cerr << __FILE__ << ':' << __LINE__ << ": " << __FUNCTION__ << std::endl; // DEBUG
-
 	// Set up libev for new child read events
 	m_io.data = this;
 	ev_io_init (&m_io, &Worker::read_cb, m_in_sock, EV_READ);

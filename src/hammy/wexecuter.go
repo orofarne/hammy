@@ -238,8 +238,9 @@ func (e *WExecuter) reader() {
 			if data.Data == nil {
 				panic(data.Err)
 			}
-			req, found := e.rTable[data.Data.Id];
+			req, found := e.rTable[data.Data.Id]
 			if found {
+				delete(e.rTable, data.Data.Id)
 				req.ResChan <- data
 			}
 		case <-c:
