@@ -1,2 +1,2 @@
 export PATH="`pwd`/golang/bin:$PATH"
-. ./env.sh
+export GOPATH="`pwd`/vendor:`pwd`"
