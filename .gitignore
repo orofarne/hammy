@@ -1,2 +1,2 @@
 *.swp
-contrib
+vendor/pkg
